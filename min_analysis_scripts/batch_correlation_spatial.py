@@ -25,10 +25,9 @@ Rewritten to Python by Sabrina Meindlhumer, 2022.
 import csv
 from pathlib import Path
 
-import correlation_tools
-import get_data
 import matplotlib.pyplot as plt
 import numpy as np
+from min_analysis_tools import correlation_tools, get_data
 
 # settings -> SET
 nmperpix = None  # nanometer per pixel (assume aspect ratio 1), set to None for pixel

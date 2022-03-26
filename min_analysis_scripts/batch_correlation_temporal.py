@@ -26,10 +26,8 @@ Rewritten to Python by Sabrina Meindlhumer, 2022.
 import csv
 from pathlib import Path
 
-import correlation_tools
 import matplotlib.pyplot as plt
-import numpy as np
-from batch_reslice_stack import reslice_stack
+from min_analysis_tools import correlation_tools, reslice_stack
 from skimage import io
 
 # parameters -> SET

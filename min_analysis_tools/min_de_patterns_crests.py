@@ -8,10 +8,10 @@ import math
 
 import matplotlib.pyplot as plt
 import numpy as np
-import peak_profile
-import xy_points
 from scipy.ndimage import map_coordinates
 from skimage import morphology as mp
+
+from min_analysis_tools import peak_profile, xy_points
 
 
 def compare_crestmaps(map1, map2, sampling_density, look_ahead, demo=0):

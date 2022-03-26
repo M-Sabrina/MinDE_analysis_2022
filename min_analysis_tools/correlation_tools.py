@@ -2,14 +2,13 @@
 Series of tools for autocorrelation analysis.
 """
 
-from pathlib import Path
-
 import matplotlib.pyplot as plt
 import numpy as np
-from clean_kymograph import clean_kymograph
 from numpy import conj, real
 from numpy.fft import fft2, fftshift, ifft2
 from scipy.signal import find_peaks
+
+from min_analysis_tools.clean_kymograph import clean_kymograph
 
 cm = 1 / 2.54  # centimeters in inches (for matplotlib figure size)
 

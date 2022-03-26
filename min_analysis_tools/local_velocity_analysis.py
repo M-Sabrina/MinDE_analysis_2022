@@ -18,10 +18,10 @@ def local_velocity_analysis(
     """
     import cv2
     import matplotlib.pyplot as plt
-    import min_de_patterns_crests
-    import min_de_patterns_velocity
     import numpy as np
     from pyoptflow import HornSchunck
+
+    from . import min_de_patterns_crests, min_de_patterns_velocity
 
     # rotate MinDE array to match image directionality
     MinDE_st = min_de_patterns_crests.adjust_stack_orientation(MinDE_st)

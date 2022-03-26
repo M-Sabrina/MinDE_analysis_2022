@@ -13,6 +13,7 @@ developed by Jacob Kerssemakers and Sabrina Meindlhumer
 - Clone this repository with `git clone`
 - Within a terminal, change directory into this repository (`cd mypath`, replace mypath with the directory in which environment.yml is located)
 - Create the environment by executing `conda env create -f environment.yml`
+- Install the Python package by executing `pip install -e .`
 
 # Execute Python files
 

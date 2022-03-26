@@ -2,12 +2,12 @@ import csv
 from enum import Enum
 from pathlib import Path
 
-import correlation_tools
-import get_data
 import matplotlib.pyplot as plt
 import numpy as np
-from local_DE_compare_analysis import local_DE_compare_analysis
-from local_velocity_analysis import local_velocity_analysis
+from min_analysis_tools import correlation_tools, get_data
+from min_analysis_tools.local_DE_compare_analysis import \
+    local_DE_compare_analysis
+from min_analysis_tools.local_velocity_analysis import local_velocity_analysis
 
 
 class Action(Enum):
@@ -39,16 +39,10 @@ kernel_size_flow = 35  # building smoothening kernel needed for flow analysis
 
 # Define stack_path -> SET
 # single file (actions 1, 2, 3)
-infile = Path(
-    r"INPUT_PATH_HERE\my_file.tif"
-)
+infile = Path(r"INPUT_PATH_HERE\my_file.tif")
 # two files (action 4)
-in_E = Path(
-    r"INPUT_PATH_HERE\my_file_E.tif"
-)
-in_D = Path(
-    r"INPUT_PATH_HERE\my_file_D.tif"
-)
+in_E = Path(r"INPUT_PATH_HERE\my_file_E.tif")
+in_D = Path(r"INPUT_PATH_HERE\my_file_D.tif")
 
 ###########################################################
 

@@ -2,12 +2,11 @@ from enum import Enum, IntEnum
 from os.path import abspath, dirname
 from pathlib import Path
 
-import correlation_tools
-import get_data
 import matplotlib.pyplot as plt
 import numpy as np
-from local_DE_compare_analysis import local_DE_compare_analysis
-from local_velocity_analysis import local_velocity_analysis
+from min_analysis_tools import correlation_tools, get_data
+from min_analysis_tools.local_DE_compare_analysis import local_DE_compare_analysis
+from min_analysis_tools.local_velocity_analysis import local_velocity_analysis
 
 
 # Options for actions to perform (choose below):
@@ -61,7 +60,7 @@ kernel_size_flow = 35  # building smoothening kernel needed for flow analysis
 
 # load correct stack(s) from example_data directory
 
-stem = Path(dirname(abspath(__file__)))
+stem = Path(dirname(abspath(__file__))).parent
 
 if selection == Selection.SIMULATION:  # simple simulated spiral
     stackname = "simulation"
