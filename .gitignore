@@ -1,0 +1,29 @@
+# Project docs
+*.ppt*
+*.doc*
+*.pdf
+*.xls*
+
+*.mat
+*.zip
+*.jpeg
+*.jpg
+*.bmp
+
+# Executables
+*.swf
+*.air
+*.ipa
+*.apk
+*.asv
+
+*.XXtif
+*.XXtiff
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Jupyter Notebook
+.ipynb_checkpoints
