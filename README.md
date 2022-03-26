@@ -1,6 +1,7 @@
 # Code for analyzing MinED patterns
 
 Cees Dekker Lab, Bionanoscience department, TU Delft, 03/2022
+Developed by Jacob Kerssemakers and Sabrina Meindlhumer
 
 # Installation (Python)
 
