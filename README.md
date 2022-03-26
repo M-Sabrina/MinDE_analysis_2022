@@ -1,5 +1,7 @@
 # Code for analyzing MinED patterns
 
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/M-Sabrina/MinDE_analysis_2022/HEAD)
+
 Cees Dekker Lab, Bionanoscience department, TU Delft, 03/2022, 
 developed by Jacob Kerssemakers and Sabrina Meindlhumer
 

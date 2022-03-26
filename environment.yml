@@ -3,11 +3,6 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - black
-  - flake8
-  - ipywidgets
-  - isort
-  - jupyterlab
   - matplotlib
   - numpy
   - pip
@@ -15,5 +10,5 @@ dependencies:
   - scikit-image
   - scipy
   - pip:
-      - opencv-python
+      - opencv-python-headless
       - pyoptflow
