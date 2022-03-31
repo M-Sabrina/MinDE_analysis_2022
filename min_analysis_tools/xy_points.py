@@ -150,10 +150,3 @@ def get_within_image_limits(xx, yy, im, hs):
     xc = xx[ix]
     yc = yy[ix]
     return xc, yc, ix
-
-
-# test section starts here-----------------------------
-
-# smoothLines(xx=1,yy=1,r0=1)
-# getNearby()
-# COM_ext(points, use_weight)

@@ -43,8 +43,8 @@ def work_wheel(
         )
         ax.set_box_aspect(1)
         plt.title("velocity histogram")
-        plt.xlabel("x-velocity (pixel/frame)")
-        plt.ylabel("y-velocity (pixel/frame)")
+        plt.xlabel("x-velocity (pixels/frame)")
+        plt.ylabel("y-velocity (pixels/frame)")
         plt.show()
         breakpoint()
 

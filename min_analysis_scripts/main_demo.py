@@ -4,7 +4,9 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
+
 from min_analysis_tools import correlation_tools, get_data
+from min_analysis_tools.get_auto_halfspan import get_auto_halfspan
 from min_analysis_tools.local_DE_compare_analysis import local_DE_compare_analysis
 from min_analysis_tools.local_velocity_analysis import local_velocity_analysis
 
@@ -35,7 +37,7 @@ class Demo(IntEnum):
 
 
 # Choose action HERE (see options in class "Action" above):
-action = Action.GLOBAL_SPATIAL
+action = Action.LOCAL_DISTANCES
 
 # Choose example dataset HERE (see options in class "Selection" above):
 selection = Selection.SPIRAL
@@ -45,7 +47,7 @@ demo = Demo.DEFAULT
 
 # General / display parameters
 size = 512  # data will be downsized to this (set "None" to skip)
-kernel_size = 16  # kernel size for initial image smoothening (set "None" to skip)
+kernel_size = 15  # kernel size for initial image smoothening (set "None" to skip)
 frames_to_analyse = 5  # set at a very large number to analyse all frames
 
 # Global temporal autocorrelation analysis parameters
@@ -53,7 +55,8 @@ reps_per_kymostack = 5  # pick ... kymographs around middle
 kymoband = 0.8  # analyse middle ... part of image
 
 # Local analysis parameters
-halfspan = 30  # halfspan for velocities / distances (ideally ~ wavelength/2)
+halfspan = None  # halfspan for velocities / distances (ideally ~ wavelength/2)
+# set halfspan to "None" to use automatic halfspan (determined from spatial autocorrelation)
 kernel_size_flow = 35  # building smoothening kernel needed for flow analysis
 
 ###########################################################
@@ -89,21 +92,23 @@ elif (
 elif (
     selection == Selection.DUAL_SPIRAL
 ):  # Min example dataset for dual-channel analysis
-    stack_path_D = stem / "example_data" / "real_dual_E.tif"
-    stack_path_E = stem / "example_data" / "real_dual_D.tif"
-    stack_path = stack_path_E
+    stack_path = stem / "example_data" / "real_dual_E.tif"
     stackname = "dual_spiral"
 
 if action == action.LOCAL_DISTANCES:
     selection = Selection.DUAL_SPIRAL
+    stack_path_D = stem / "example_data" / "real_dual_D.tif"
+    stack_path_E = stem / "example_data" / "real_dual_E.tif"
     print("Selection set to dual channel example")
     MinE_st, fig_E, ax_E = get_data.load_stack(
         stack_path_E, size=size, kernel_size=kernel_size, demo=True
     )
+    ax_E.set_title("MinE stack")
     fig_E.show()
     MinD_st, fig_D, ax_D = get_data.load_stack(
         stack_path_D, size=size, kernel_size=kernel_size, demo=True
     )
+    ax_D.set_title("MinD stack")
     fig_D.show()
 else:
     Min_st, fig, ax = get_data.load_stack(
@@ -141,9 +146,9 @@ if action == Action.GLOBAL_SPATIAL:
     ) = correlation_tools.analyze_radial_profiles(crmx_storage)
     fig.show()
 
-    print(f"mean position of first valley: {np.mean(first_min_pos)}")
-    print(f"mean position of first peak (!): {np.mean(first_max_pos)}")
-    print(f"mean peak-valley difference: {np.mean(peak_valley_diff)}")
+    print(f"mean position of first valley: {np.mean(first_min_pos):.02f}")
+    print(f"mean position of first peak (!): {np.mean(first_max_pos):.02f}")
+    print(f"mean peak-valley difference: {np.mean(peak_valley_diff):.02f}")
 
 ###########################################################
 
@@ -158,7 +163,7 @@ elif action == Action.GLOBAL_TEMPORAL:
     for frame in range(ff):  # tranpose images to create t-y resliced frames
         MinDE_shift_ty[frame, :, :] = np.transpose(MinDE_shift_yt[frame, :, :])
 
-    # for x-t slices or for y-t slices
+    # for t-x slices or for t-y slices
     for axis in ["x", "y"]:
 
         if axis == "x":
@@ -212,15 +217,20 @@ elif action == Action.GLOBAL_TEMPORAL:
             first_max_val = np.append(tmp_first_max_val, first_max_val)
             peak_valley_diff = np.append(tmp_peak_valley_diff, peak_valley_diff)
 
-    print(f"mean position of first valley: {np.mean(first_min_pos)}")
-    print(f"mean position of first peak (!): {np.mean(first_max_pos)}")
-    print(f"mean peak-valley difference: {np.mean(peak_valley_diff)}")
+    print(f"mean position of first valley: {np.mean(first_min_pos):.02f}")
+    print(f"mean position of first peak (!): {np.mean(first_max_pos):.02f}")
+    print(f"mean peak-valley difference: {np.mean(peak_valley_diff):.02f}")
 
 ###########################################################
 
 ## Local analysis: Velocity wheel
 
 elif action == Action.LOCAL_VELOCITY:
+
+    if halfspan is None:
+        halfspan = get_auto_halfspan(Min_st, frames_to_analyse)
+        print(f"Auto-halfspan determined: {halfspan} pixels")
+
     (
         velocities,
         forward_wavevector_x,
@@ -248,6 +258,11 @@ elif action == Action.LOCAL_VELOCITY:
 # Local analysis: 2-channel crest detection
 
 elif action == Action.LOCAL_DISTANCES:
+
+    if halfspan is None:
+        halfspan = get_auto_halfspan(MinE_st, frames_to_analyse)
+        print(f"Auto-halfspan determined: {halfspan} pixels")
+
     (
         distances_DE,
         forward_wavevector_x,
@@ -262,11 +277,11 @@ elif action == Action.LOCAL_DISTANCES:
         frames_to_analyse=frames_to_analyse,
         halfspan=halfspan,  # halfspan for distances (ideally ~ wavelength/2)
         sampling_density=1,  # in pixel units
-        edge=10,  # outer edge (+/-) for DE-shift wheel and velocity histogram
+        edge=5,  # outer edge (+/-) for DE-shift wheel and velocity histogram
         bins_wheel=50,  # number of horizontal/vertical bins for histogram wheels
         binwidth_sum=1,  # binwidth for distance histogram
         kernel_size_flow=35,  # building smoothening kernel needed for flow analysis
-        look_ahead=-1,  # for ridge advancement search: -1 is backward, E follows D
+        look_ahead=-1,  # for ridge advancement search: -1 is backward, assume E follows D
         demo=demo,
     )
     fig.show()

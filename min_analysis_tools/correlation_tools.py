@@ -96,6 +96,7 @@ def get_spatial_correlation_matrixes(
     MinDE_st_full,
     frames_to_analyse,
     demo=1,
+    verbose=True,
 ):
     """
     Performs spatial autocorrelation for a set number of frames (frames_to_analyze) on an image stack (stack).
@@ -110,12 +111,13 @@ def get_spatial_correlation_matrixes(
     # check number of images
     if frames_to_analyse > fz:
         frames_to_analyse = fz
-    print(f"Analysing {frames_to_analyse} frames")
+    if verbose:
+        print(f"Analysing {frames_to_analyse} frames")
 
-    # perform autocorrelation analysis for every frame
-    for framenr in range(frames_to_analyse):
+    # perform autocorrelation analysis for every frames
+    for framesnr in range(frames_to_analyse):
 
-        image = MinDE_st_full[framenr, :, :]
+        image = MinDE_st_full[framesnr, :, :]
 
         # calculate correlation matrix for image
         crmx = autocorrelation(image)
@@ -126,27 +128,27 @@ def get_spatial_correlation_matrixes(
         # normalize to maximum
         crmx = crmx / np.max(crmx)
 
-        # first frame: create storage for correltaion matrixes
+        # first frames: create storage for correltaion matrixes
         # also, plot example image and correlation matrix if requested
-        if framenr == 0:
+        if framesnr == 0:
             crmx_storage = np.empty((frames_to_analyse, fy, fx))
-            crmx_storage[framenr, :, :] = crmx
+            crmx_storage[framesnr, :, :] = crmx
 
             if demo > 0:
                 fig, (ax_orig, ax_corr) = plt.subplots(1, 2, figsize=(18 * cm, 10 * cm))
                 ax_orig.imshow(image)
                 ax_orig.set_title("Image")
-                ax_orig.set_xlabel("x (pixel)")
-                ax_orig.set_ylabel("y (pixel)")
+                ax_orig.set_xlabel("x (pixels)")
+                ax_orig.set_ylabel("y (pixels)")
                 ax_corr.imshow(crmx, extent=[-fx // 2, fx // 2, -fy // 2, fy // 2])
                 ax_corr.set_title("Autocorrelation")
-                ax_corr.set_xlabel("$\Delta$ x (pixel)")
-                ax_corr.set_ylabel("$\Delta$ y (pixel)")
+                ax_corr.set_xlabel("$\Delta$ x (pixels)")
+                ax_corr.set_ylabel("$\Delta$ y (pixels)")
                 ax_corr.yaxis.set_label_position("right")
                 ax_corr.yaxis.tick_right()
                 plt.subplots_adjust(wspace=0.1)
         else:
-            crmx_storage[framenr, :, :] = crmx
+            crmx_storage[framesnr, :, :] = crmx
 
     # return correlation matrixes (and figure handles, if requested)
     if demo > 0:
@@ -178,7 +180,7 @@ def analyze_radial_profiles(
 
     # recognize unit
     if nmperpix is None:
-        unit = "pixel"
+        unit = "pixels"
     else:
         unit = "µm"
 
@@ -186,41 +188,42 @@ def analyze_radial_profiles(
     if demo > 0:
         fig, ax = plt.subplots(1, 1, figsize=(18 * cm, 10 * cm))
         ax.set_xlabel(f"distance ({unit})")
+        ax.set_ylabel("autocorrelation (a.u.)")
 
     # calculate radial profiles and determine characteristic values
-    for framenr in range(fz):
+    for framesnr in range(fz):
 
         # calculate radial profile from correlation matrix
-        crmx = crmx_storage[framenr, :, :]
+        crmx = crmx_storage[framesnr, :, :]
         radialprofile = radial_profile(crmx)
 
-        # prepare x axes (in pixel or um) for plotting
+        # prepare x axes (in pixels or um) for plotting
         x_axis = np.array(range(np.shape(radialprofile)[0]))  # 1 2 3 ...
         if nmperpix is not None:
             x_axis = x_axis * nmperpix / 1000  # convert to um, if factor is provided
 
         # plot profiles
         if demo > 0:
-            ax.plot(x_axis, radialprofile, label=f"frame {framenr+1}")
+            ax.plot(x_axis, radialprofile, label=f"frame {framesnr+1}")
 
         try:
             # analyze local maxima and minima (peaks and valleys)
             (
-                first_min_pos[framenr],
-                first_min_val[framenr],
-                first_max_pos[framenr],
-                first_max_val[framenr],
-                peak_valley_diff[framenr],
+                first_min_pos[framesnr],
+                first_min_val[framesnr],
+                first_max_pos[framesnr],
+                first_max_val[framesnr],
+                peak_valley_diff[framesnr],
             ) = analyze_peaks(radialprofile, kernel_size=int(fx / 100))
         except:
-            print(f"Peak analysis not successfull for frame {framenr+1}")
-            first_min_pos[framenr] = None
-            first_min_val[framenr] = None
-            first_max_pos[framenr] = None
-            first_max_val[framenr] = None
-            peak_valley_diff[framenr] = None
+            print(f"Peak analysis not successfull for frame {framesnr+1}")
+            first_min_pos[framesnr] = None
+            first_min_val[framesnr] = None
+            first_max_pos[framesnr] = None
+            first_max_val[framesnr] = None
+            peak_valley_diff[framesnr] = None
 
-    # convert positions from pixel to um
+    # convert positions from pixels to um
     if nmperpix is not None:
         first_max_pos = first_max_pos * nmperpix / 1000  # wavelength in µm
         first_min_pos = first_min_pos * nmperpix / 1000  # wavelength / 2 µm (approx)
@@ -262,12 +265,13 @@ def get_temporal_correlation_matrixes(
     kymoband,
     reps_per_kymostack,
     demo=1,
+    verbose=True,
 ):
     """
     Performs autocorrelation for a set number of resliced frames (reps_per_kymostack) on a
     resliced image stack (stack).
     Output: numpy array of size reps_per_kymostack x (size of correlation matrix).
-    If save is True, save exemplary resliced frame and correlation matrix as image to savepath.
+    If save is True, save exemplary resliced frames and correlation matrix as image to savepath.
     If demo is True, show this image.
     """
 
@@ -286,7 +290,8 @@ def get_temporal_correlation_matrixes(
         constant_axis = "y"
     else:
         constant_axis = "x"
-    print(f"Analyzing t-{axis} slices for {constant_axis} = {slices2analyze}")
+    if verbose:
+        print(f"Analyzing t-{axis} slices for {constant_axis} = {slices2analyze}")
 
     # perform autocorrelation on selected resliced frames and collect the results
     for ni in range(reps_per_kymostack):
@@ -308,16 +313,16 @@ def get_temporal_correlation_matrixes(
                 fig, (ax_orig, ax_corr) = plt.subplots(1, 2, figsize=(18 * cm, 10 * cm))
                 ax_orig.imshow(resliceim, aspect="auto")
                 ax_orig.set_title(f"Resliced image t-{axis}, {constant_axis}={slice_i}")
-                ax_orig.set_xlabel("t (frame)")
-                ax_orig.set_ylabel(f"{axis} (pixel)")
+                ax_orig.set_xlabel("t (frames)")
+                ax_orig.set_ylabel(f"{axis} (pixels)")
                 ax_corr.imshow(
                     crmx,
                     aspect="auto",
                     extent=[-ax3 // 2, ax3 // 2, -ax2 // 2, ax2 // 2],
                 )
                 ax_corr.set_title("Autocorrelation")
-                ax_corr.set_xlabel("$\Delta$ t (frame)")
-                ax_corr.set_ylabel(f"$\Delta$ {axis} (pixel)")
+                ax_corr.set_xlabel("$\Delta$ t (frames)")
+                ax_corr.set_ylabel(f"$\Delta$ {axis} (pixels)")
                 ax_corr.yaxis.set_label_position("right")
                 ax_corr.yaxis.tick_right()
                 plt.subplots_adjust(wspace=0.1)
@@ -355,7 +360,7 @@ def analyze_temporal_profiles(
 
     # recognize unit
     if frpermin is None:
-        unit = "frame"
+        unit = "frames"
     else:
         unit = "s"
 
@@ -363,17 +368,18 @@ def analyze_temporal_profiles(
     if demo > 0:
         fig, ax = plt.subplots(1, 1, figsize=(18 * cm, 10 * cm))
         ax.set_xlabel(f"$\Delta$ t ({unit})")
+        ax.set_ylabel("autocorrelation (a.u.)")
 
     # plot profiles and calculate characteristic values
-    for framenr in range(ax1):
+    for framesnr in range(ax1):
 
         # define trace to analyze (first row, from t=0 to t=tmax/2)
-        crmx = crmx_storage[framenr, :, :]
+        crmx = crmx_storage[framesnr, :, :]
         tmp = crmx[0, :]  # first row
         prf_tcor = tmp[0 : (ax3 // 2)]  # first tmax/2 time points
         prf_tcor = prf_tcor / max(prf_tcor)
 
-        # prepare x axes (in frame or s) for plotting
+        # prepare x axes (in frames or s) for plotting
         x_axis = np.array(range(np.shape(prf_tcor)[0]))  # 1 2 3 ...
         if frpermin is not None:
             x_axis = x_axis * 60 / frpermin  # convert to seconds, if factor is provided
@@ -385,27 +391,27 @@ def analyze_temporal_profiles(
             else:
                 constant_axis = "x"
             ax.plot(
-                x_axis, prf_tcor, label=f"{constant_axis} = {slices2analyze[framenr]}"
+                x_axis, prf_tcor, label=f"{constant_axis} = {slices2analyze[framesnr]}"
             )
 
         try:
             # analyze local maxima and minima (peaks and valleys)
             (
-                first_min_pos[framenr],
-                first_min_val[framenr],
-                first_max_pos[framenr],
-                first_max_val[framenr],
-                peak_valley_diff[framenr],
+                first_min_pos[framesnr],
+                first_min_val[framesnr],
+                first_max_pos[framesnr],
+                first_max_val[framesnr],
+                peak_valley_diff[framesnr],
             ) = analyze_peaks(prf_tcor)
         except:
-            print(f"Peak analysis not successfull for resliced frame {framenr+1}")
-            first_min_pos[framenr] = None
-            first_min_val[framenr] = None
-            first_max_pos[framenr] = None
-            first_max_val[framenr] = None
-            peak_valley_diff[framenr] = None
+            print(f"Peak analysis not successfull for resliced frames {framesnr+1}")
+            first_min_pos[framesnr] = None
+            first_min_val[framesnr] = None
+            first_max_pos[framesnr] = None
+            first_max_val[framesnr] = None
+            peak_valley_diff[framesnr] = None
 
-    # convert positions from pixel to um
+    # convert positions from pixels to um
     if frpermin is not None:
         first_max_pos = first_max_pos * 60 / frpermin  # oscillation period in s
         first_min_pos = first_min_pos * 60 / frpermin  # oscillation period / 2 (approx)

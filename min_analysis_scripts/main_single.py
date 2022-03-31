@@ -4,9 +4,10 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
+
 from min_analysis_tools import correlation_tools, get_data
-from min_analysis_tools.local_DE_compare_analysis import \
-    local_DE_compare_analysis
+from min_analysis_tools.get_auto_halfspan import get_auto_halfspan
+from min_analysis_tools.local_DE_compare_analysis import local_DE_compare_analysis
 from min_analysis_tools.local_velocity_analysis import local_velocity_analysis
 
 
@@ -22,7 +23,7 @@ action = Action.GLOBAL_SPATIAL
 
 # General / display parameters:
 size = 512  # data will be downsized to this (set "None" to skip)
-kernel_size = 16  # kernel size for initial image smoothening (set "None" to skip)
+kernel_size = 15  # kernel size for initial image smoothening (set "None" to skip)
 frames_to_analyse = 5  # set at a very large number to analyse all frames
 
 # Stack information (set both to None to work with pixel and frames only):
@@ -34,7 +35,8 @@ reps_per_kymostack = 5  # pick ... kymographs around middle
 kymoband = 0.8  # analyse middle ... part of image
 
 # Local analysis parameters:
-halfspan = 30  # halfspan for velocities / distances (ideally ~ wavelength/2)
+halfspan = None  # halfspan for velocities / distances (ideally ~ wavelength/2)
+# set halfspan to "None" to use automatic halfspan (determined from spatial autocorrelation)
 kernel_size_flow = 35  # building smoothening kernel needed for flow analysis
 
 # Define stack_path -> SET
@@ -69,7 +71,7 @@ if action == Action.GLOBAL_SPATIAL:
 
     # recognize unit
     if nmperpix is None:
-        unit = "pixel"
+        unit = "pixels"
     else:
         unit = "µm"
 
@@ -102,9 +104,9 @@ if action == Action.GLOBAL_SPATIAL:
     fig.savefig(profile_fig_path, dpi=500)
     plt.close(fig)
 
-    print(f"mean position of first valley: {np.mean(first_min_pos)} {unit}")
-    print(f"mean position of first peak (!): {np.mean(first_max_pos)} {unit}")
-    print(f"mean peak-valley difference: {np.mean(peak_valley_diff)}")
+    print(f"mean position of first valley: {np.mean(first_min_pos):.02f} {unit}")
+    print(f"mean position of first peak (!): {np.mean(first_max_pos):.02f} {unit}")
+    print(f"mean peak-valley difference: {np.mean(peak_valley_diff):.02f}")
 
     # create csv file for saving characteristic parameters later
     csv_file = outpath / f"{stackname}_spatial_autocorrelation_results.csv"
@@ -140,7 +142,7 @@ elif action == Action.GLOBAL_TEMPORAL:
 
     # recognize unit
     if frpermin is None:
-        unit = "frame"
+        unit = "frames"
     else:
         unit = "s"
 
@@ -148,7 +150,7 @@ elif action == Action.GLOBAL_TEMPORAL:
     MinDE_shift_yt = np.moveaxis(Min_st, -1, 0)  # creates y-t resliced frames
     ff, rr, cc = np.shape(MinDE_shift_yt)
     MinDE_shift_ty = np.empty((ff, cc, rr))
-    for frame in range(ff):  # tranpose images to create t-y resliced frames
+    for frame in range(ff):  # transpose images to create t-y resliced frames
         MinDE_shift_ty[frame, :, :] = np.transpose(MinDE_shift_yt[frame, :, :])
 
     # create csv file for saving characteristic parameters later
@@ -168,7 +170,7 @@ elif action == Action.GLOBAL_TEMPORAL:
         writer = csv.writer(csv_f, delimiter="\t")
         writer.writerow(header)
 
-    # for x-t slices or for y-t slices
+    # for t-x slices or for t-y slices
     for axis in ["x", "y"]:
 
         # pick correct resliced file
@@ -266,15 +268,20 @@ elif action == Action.GLOBAL_TEMPORAL:
             first_max_val = np.append(tmp_first_max_val, first_max_val)
             peak_valley_diff = np.append(tmp_peak_valley_diff, peak_valley_diff)
 
-    print(f"mean position of first valley: {np.mean(first_min_pos)} {unit}")
-    print(f"mean position of first peak (!): {np.mean(first_max_pos)} {unit}")
-    print(f"mean peak-valley difference: {np.mean(peak_valley_diff)}")
+    print(f"mean position of first valley: {np.mean(first_min_pos):.02f} {unit}")
+    print(f"mean position of first peak (!): {np.mean(first_max_pos):.02f} {unit}")
+    print(f"mean peak-valley difference: {np.mean(peak_valley_diff):.02f}")
 
 ###########################################################
 
 ## Local analysis: Velocity wheel
 
 elif action == Action.LOCAL_VELOCITY:
+
+    if halfspan is None:
+        halfspan = get_auto_halfspan(Min_st, frames_to_analyse)
+        print(f"Auto-halfspan determined: {halfspan} pixels")
+
     (
         velocities,
         forward_wavevector_x,
@@ -305,7 +312,7 @@ elif action == Action.LOCAL_VELOCITY:
         unit = "nm/s"
         factor = (nmperpix) / (60 / frpermin)
     else:
-        unit = "pixel"
+        unit = "pixels/frame"
         factor = 1
     # create header for csv file
     header = [
@@ -330,13 +337,20 @@ elif action == Action.LOCAL_VELOCITY:
             )
 
     if nmperpix is not None and frpermin is not None:
-        print(f"Median velocity magnitude: {np.nanmedian(velocities * factor)} nm/s")
+        print(
+            f"Median velocity magnitude: {np.nanmedian(velocities * factor):.02f} nm/s"
+        )
 
 ###########################################################
 
 # Local analysis: 2-channel crest detection
 
 elif action == Action.LOCAL_DISTANCES:
+
+    if halfspan is None:
+        halfspan = get_auto_halfspan(MinE_st, frames_to_analyse)
+        print(f"Auto-halfspan determined: {halfspan} pixel")
+
     (
         distances_DE,
         forward_wavevector_x,
@@ -367,7 +381,7 @@ elif action == Action.LOCAL_DISTANCES:
         unit = "µm"
         factor = nmperpix / 1000
     else:
-        unit = "pixel"
+        unit = "pixels"
         factor = 1
     header = [
         f"distances_DE ({unit})",
@@ -391,4 +405,6 @@ elif action == Action.LOCAL_DISTANCES:
             )
 
     if nmperpix is not None:
-        print(f"Median DE-crest distance: {np.nanmedian(distances_DE * factor)} µm")
+        print(
+            f"Median DE-crest distance: {np.nanmedian(distances_DE * factor):.02f} µm"
+        )

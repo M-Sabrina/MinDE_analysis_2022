@@ -111,8 +111,8 @@ def local_velocity_analysis(
         ax_wheel.set_box_aspect(1)
         ax_wheel.axvline(x=0, color="white")
         ax_wheel.axhline(y=0, color="white")
-        ax_wheel.set_xlabel("x-velocity (pixel/frame)")
-        ax_wheel.set_ylabel("y-velocity (pixel/frame)")
+        ax_wheel.set_xlabel("x-velocity (pixels/frame)")
+        ax_wheel.set_ylabel("y-velocity (pixels/frame)")
 
         ax_sum.hist(
             velocities,
@@ -121,9 +121,11 @@ def local_velocity_analysis(
             edgecolor="black",
         )
         ax_sum.set_ylabel("counts")
-        ax_sum.set_xlabel("velocity magnitude (pixel/frame)")
+        ax_sum.set_xlabel("velocity magnitude (pixels/frame)")
         fig.tight_layout()
-        print(f"Median velocity magnitude: {np.nanmedian(velocities)} pixel/frame")
+        print(
+            f"Median velocity magnitude: {np.nanmedian(velocities):.02f} pixels/frame"
+        )
 
         return (
             velocities,

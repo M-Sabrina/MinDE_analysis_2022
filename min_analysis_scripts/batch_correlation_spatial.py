@@ -27,6 +27,7 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
+
 from min_analysis_tools import correlation_tools, get_data
 
 # settings -> SET
@@ -47,7 +48,7 @@ if not outpath.is_dir():
 csv_file = outpath / "spatial_autocorrelation_results.csv"
 # recognize unit
 if nmperpix is None:
-    unit = "pixel"
+    unit = "pixels"
 else:
     unit = "µm"
 # create header for csv file

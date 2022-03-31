@@ -86,7 +86,7 @@ def compare_crestmaps(map1, map2, sampling_density, look_ahead, demo=0):
             plt.plot(x1, y1, "ko", markersize=6)
             plt.plot(x2, y2, "ko", markersize=6)
             plt.title("cross-section shift")
-            plt.xlabel("x (pixel)")
+            plt.xlabel("distance (pixels)")
             plt.ylabel("fluorescence, a.u.")
             plt.show()
             breakpoint()  # click-to-code help
@@ -122,8 +122,8 @@ def get_rise_or_fall(U, V, Im, demo=0):
         plt.figure()
         plt.imshow(wavesign)
         plt.title("front and wakes areas")
-        plt.xlabel("x (pixel)")
-        plt.ylabel("y (pixel)")
+        plt.xlabel("x (pixels)")
+        plt.ylabel("y (pixels)")
         plt.show()
         breakpoint()  # click-to-code help
     return wavesign
@@ -198,8 +198,8 @@ def get_crests(wavesign_im, im, halfspan=5, demo=0):
         plt.plot(cx2[zm_ix], cy2[zm_ix], "bo", markersize=1)
         ax.set_box_aspect(1)
         plt.title("crest propagation")
-        plt.xlabel("x (pixel)")
-        plt.ylabel("y (pixel)")
+        plt.xlabel("x (pixels)")
+        plt.ylabel("y (pixels)")
         plt.show()
         breakpoint()  # click-to-code help
 
@@ -263,12 +263,12 @@ def sample_crests(im1, cr_xx, cr_yy, wv_xx, wv_yy, halfspan, sampling_density, d
         )
         ax1.plot(cr_xx[zm_ix1] - zm_lo, cr_yy[zm_ix1] - zm_lo, "ro", markersize=5)
         ax1.set_title("mapping overlay")
-        ax1.set_xlabel("x (pixel)")
-        ax1.set_ylabel("y (pixel)")
+        ax1.set_xlabel("x (pixels)")
+        ax1.set_ylabel("y (pixels)")
         ax2.imshow(profilemap.T[:, zm_ix1], aspect="auto")
         ax2.set_title("sampling 0")
         ax2.set_xlabel("crest index")
-        ax2.set_ylabel("position (pixel)")
+        ax2.set_ylabel("position (pixels)")
         fig.show()
         breakpoint()  # click-to-code help
 

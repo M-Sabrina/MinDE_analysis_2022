@@ -80,22 +80,3 @@ def get_maxima(prf=0, N_max=1):
         else:
             max_ix = [np.nan]
     return max_ix
-
-
-# test section starts here-----------------------------
-# LP = 100
-# temp_ax = np.arange(0, LP, 1)
-# prf = (
-#       5 * np.exp(-((temp_ax - 5) ** 2) / 4 ** 2) +
-#       2 * np.exp(-((temp_ax - 25) ** 2) / 4 ** 2) +
-#       4 * np.exp(-((temp_ax - 45) ** 2) / 4 ** 2) +
-#       2 * np.exp(-((temp_ax - 65) ** 2) / 4 ** 2) +
-#       3 * np.exp(-((temp_ax - 95) ** 2) / 4 ** 2)
-#       )
-# ix = get_maxima( prf, N_max=3)
-
-# plt.plot(prf, "b-")
-# plt.plot(ix, prf[ix], "ro")
-# plt.show()
-# sub_unit_pos(prf,ix, 1)
-# smoothLines(xx=1,yy=1,r0=1)

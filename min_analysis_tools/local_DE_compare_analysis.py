@@ -118,8 +118,8 @@ def local_DE_compare_analysis(
         ax_wheel.set_box_aspect(1)
         ax_wheel.axvline(x=0, color="white")
         ax_wheel.axhline(y=0, color="white")
-        ax_wheel.set_xlabel("x-distance (pixel)")
-        ax_wheel.set_ylabel("y-distance (pixel)")
+        ax_wheel.set_xlabel("x-distance (pixels)")
+        ax_wheel.set_ylabel("y-distance (pixels)")
 
         ax_sum.hist(
             delta_x_DE,
@@ -128,10 +128,10 @@ def local_DE_compare_analysis(
             edgecolor="black",
         )
         ax_sum.set_ylabel("counts")
-        ax_sum.set_xlabel("distance DE (pixel)")
+        ax_sum.set_xlabel("distance DE (pixels)")
         fig.tight_layout()
 
-        print(f"Median DE-crest distance: {np.nanmedian(delta_x_DE)} pixel")
+        print(f"Median DE-crest distance: {np.nanmedian(delta_x_DE):.02f} pixels")
 
         # demo section stop  ------------------------
         return (

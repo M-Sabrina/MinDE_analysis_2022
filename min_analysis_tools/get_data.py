@@ -71,8 +71,8 @@ def load_stack(stack_path, size, kernel_size=35, demo=0):
         fig, ax = plt.subplots(1, 1)
         ax.imshow(MinDE_st[0, :, :])
         ax.set_title("pattern")
-        ax.set_xlabel("x (pixel)")
-        ax.set_ylabel("y (pixel)")
+        ax.set_xlabel("x (pixels)")
+        ax.set_ylabel("y (pixels)")
         return MinDE_st, fig, ax
     # demo section stop  ------------------------
     else:
@@ -116,15 +116,9 @@ def generate_pattern(
         fig, ax = plt.subplots(1, 1)
         ax.imshow(MinDE_st[0, :, :])
         ax.set_title("pattern")
-        ax.set_xlabel("x (pixel)")
-        ax.set_ylabel("y (pixel)")
+        ax.set_xlabel("x (pixels)")
+        ax.set_ylabel("y (pixels)")
         return MinDE_st, fig, ax
     # demo section stop  ------------------------
     else:
         return MinDE_st
-
-
-# test section starts here-----------------------------
-# generate_pattern()
-# getNearby()
-# COM_ext(points, use_weight)
