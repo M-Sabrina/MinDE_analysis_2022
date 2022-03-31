@@ -1,4 +1,4 @@
-# Code for analyzing MinED patterns
+# Code for analyzing MinDE patterns
 
 Cees Dekker Lab, Bionanoscience department, TU Delft, 03/2022, developed by Jacob Kerssemakers and Sabrina Meindlhumer
 
