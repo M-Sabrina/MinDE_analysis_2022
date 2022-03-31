@@ -10,7 +10,7 @@ Jupyter notebooks can be accessed in the following binder:
 This binder contains three notebooks:
 - DEMO_MinDE_global_analysis.ipynb: demonstration of global analysis
 - DEMO_MinDE_local_analysis.ipynb: demonstration of local analysis
-- Quickstart_Min_analysis: quick analysis tool for single-stack Min pattern analysis
+- Quickstart_Min_analysis.ipynb: quick analysis tool for (remote) single-stack Min pattern analysis
 
 # Installation (Python)
 
