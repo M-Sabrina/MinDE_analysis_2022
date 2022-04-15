@@ -17,7 +17,6 @@ Characteristic parameters are:
     "valley_val" - amplitude of first minimum
     "peak_pos" - position of first maximum in seconds --> oscillation period
     "peak_val" - amplitude of first maximum
-    "peak_valley_diff" - difference between max (peak) and min (valley) amplitude
 
 Reference: Cees Dekker Lab; project: MinDE; researcher: Sabrina Meindlhumer.
 Code designed & written in MatLab by Jacob Kerssemakers, 2016.
@@ -27,8 +26,9 @@ import csv
 from pathlib import Path
 
 import matplotlib.pyplot as plt
-from min_analysis_tools import correlation_tools, reslice_stack
 from skimage import io
+
+from min_analysis_tools import correlation_tools, reslice_stack
 
 # parameters -> SET
 frpermin = None  # frames per minute. Set to None to stick to frames
@@ -64,7 +64,6 @@ header = [
     "valley_val",  # amplitude of first minimum
     f"peak_pos ({unit})",  # position of first maximum --> oscillation period
     "peak_val",  # amplitude of first maximum
-    "peak_valley_diff",
 ]
 with open(csv_file_path, "w") as csv_f:  # will overwrite existing
     # create the csv writer
@@ -107,7 +106,6 @@ for stack in inpath.glob("**/*.tif"):  # find all tif files in `inpath`
             first_min_val,
             first_max_pos,
             first_max_val,
-            peak_valley_diff,
             fig,
             ax,
         ) = correlation_tools.analyze_temporal_profiles(
@@ -137,7 +135,6 @@ for stack in inpath.glob("**/*.tif"):  # find all tif files in `inpath`
                             first_min_val[n],
                             first_max_pos[n],
                             first_max_val[n],
-                            peak_valley_diff[n],
                         ]
                     )
         # save for ty slices
@@ -156,6 +153,5 @@ for stack in inpath.glob("**/*.tif"):  # find all tif files in `inpath`
                             first_min_val[n],
                             first_max_pos[n],
                             first_max_val[n],
-                            peak_valley_diff[n],
                         ]
                     )

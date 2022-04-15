@@ -15,7 +15,6 @@ Characteristic parameters are:
     "valley_val" - amplitude of first minimum
     "peak_pos" - position of first maximum in um --> wavelength
     "peak_val" - amplitude of first maximum
-    "peak_valley_diff" - difference between max (peak) and min (valley) amplitude
 
 Reference: Cees Dekker Lab; project: MinDE; researcher: Sabrina Meindlhumer.
 Code designed & written in MatLab by Jacob Kerssemakers, 2016.
@@ -26,15 +25,13 @@ import csv
 from pathlib import Path
 
 import matplotlib.pyplot as plt
-import numpy as np
+from skimage import io
 
-from min_analysis_tools import correlation_tools, get_data
+from min_analysis_tools import correlation_tools
 
 # settings -> SET
 nmperpix = None  # nanometer per pixel (assume aspect ratio 1), set to None for pixel
 frames_to_analyse = 10  # analyse first ... frames per stack
-size = None  # smallest dim will be downsized to this (set "None" to skip) -> !! adapt nmperpix manually !!
-kernel_size = None  # kernel size for initial image smoothening (set "None" to skip)
 
 # define inpath  -> SET
 inpath = Path(r"INPUT_PATH_HERE")
@@ -59,7 +56,6 @@ header = [
     "valley_val",  # amplitude of first minimum
     f"peak_pos ({unit})",  # position of first maximum --> wavelength
     "peak_val",  # amplitude of first maximum
-    "peak_valley_diff",
 ]
 with open(csv_file, "w") as csv_f:  # will overwrite existing
     # create the csv writer
@@ -70,7 +66,7 @@ with open(csv_file, "w") as csv_f:  # will overwrite existing
 for stack in inpath.glob("**/*.tif"):  # find all tif files in inpath
 
     # load stack (tif file)
-    MinDE_st_full = get_data.load_stack(stack, size, kernel_size, demo=False)
+    MinDE_st_full = io.imread(stack)
     stackname = str(stack.stem)
     print(f"Loading {stackname}")
 
@@ -95,7 +91,6 @@ for stack in inpath.glob("**/*.tif"):  # find all tif files in inpath
         first_min_val,
         first_max_pos,
         first_max_val,
-        peak_valley_diff,
         fig,
         ax,
     ) = correlation_tools.analyze_radial_profiles(
@@ -121,6 +116,5 @@ for stack in inpath.glob("**/*.tif"):  # find all tif files in inpath
                     first_min_val[n],
                     first_max_pos[n],
                     first_max_val[n],
-                    peak_valley_diff[n],
                 ]
             )

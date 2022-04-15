@@ -4,79 +4,10 @@ MinDE pattern analysis: loading or generating data
 Created on Nov 23 2021
 @author: jkerssemakers
 """
-from math import ceil
 
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
-from skimage import io
-
-
-def load_stack(stack_path, size, kernel_size=35, demo=0):
-    """
-    This loads function loads an image stack from a given directory.
-    Each frame is downsized to a given 'size' (default 512), applying
-    to the shorter axis. Set 'size' to None to skip.
-    Each frames is smoothened using a kernel defined by 'kernel_size'.
-    Set 'kernel_size' to None to skip.
-    """
-    MinDE_st_full = io.imread(stack_path)
-    ff, rr, cc = np.shape(MinDE_st_full)
-    if size is not None and rr > size and cc > size:
-        downsize = True
-    else:
-        downsize = False
-    if kernel_size is not None:
-        smooth_image = True
-    else:
-        smooth_image = False
-
-    if downsize is True or smooth_image is True:
-        # new image dimensions for downsizing
-        if downsize:
-            dimensions = (ceil(size * cc / min(cc, rr)), ceil(size * rr / min(cc, rr)))
-        # define kernel for smoothening
-        if smooth_image:
-            kernel = np.ones((kernel_size, kernel_size), np.float32) / (
-                kernel_size ** 2
-            )
-        # work all frames
-        for ii in range(ff):
-            frame = MinDE_st_full[ii, :, :]
-            # smooth image
-            if smooth_image:
-                frame_filt = cv2.filter2D(frame, -1, kernel)
-            else:
-                frame_filt = frame
-            # downsize image
-            if downsize:
-                frame_ip = cv2.resize(
-                    frame_filt, dimensions, interpolation=cv2.INTER_NEAREST
-                )
-            else:
-                frame_ip = frame_filt
-            # save images (append to stack)
-            if ii == 0:
-                MinDE_st = frame_ip
-            else:
-                MinDE_st = np.dstack((MinDE_st, frame_ip))
-        # correctly rearrange axes
-        MinDE_st = np.moveaxis(MinDE_st, 2, 0)
-
-    else:  # no action required
-        MinDE_st = MinDE_st_full
-
-    # demo section start ------------------------
-    if demo > 0:
-        fig, ax = plt.subplots(1, 1)
-        ax.imshow(MinDE_st[0, :, :])
-        ax.set_title("pattern")
-        ax.set_xlabel("x (pixels)")
-        ax.set_ylabel("y (pixels)")
-        return MinDE_st, fig, ax
-    # demo section stop  ------------------------
-    else:
-        return MinDE_st
 
 
 def generate_pattern(

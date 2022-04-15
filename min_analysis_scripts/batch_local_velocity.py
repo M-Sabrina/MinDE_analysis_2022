@@ -3,8 +3,8 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
+from skimage import io
 
-from min_analysis_tools import get_data
 from min_analysis_tools.get_auto_halfspan import get_auto_halfspan
 from min_analysis_tools.local_velocity_analysis import local_velocity_analysis
 
@@ -15,17 +15,16 @@ inpath = Path(r"INPUT_PATH_HERE")
 nmperpix = None  # nanometer per pixel (assume aspect ratio 1), set to None for pixel
 frpermin = None  # frames per minute. Set to None to stick to frames
 frames_to_analyse = 10  # analyse first ... frames per stack
-size = None  # smallest dim will be downsized to this (set "None" to skip) -> !! adapt nmperpix manually !!
-kernel_size = 20  # kernel size for initial image smoothening (set "None" to skip)
 
 # Local analysis parameters -> SET
 halfspan = None  # halfspan for velocities / distances (ideally ~ wavelength/2)
-# set halfspan to None to automatize (use global autocorrelation analysis)
-kernel_size_flow = 35  # building smoothening kernel needed for flow analysis
-sampling_density = 0.25  # in pixel units
-edge = 50  # outer edge (+/-) for velocity wheel and velocity histogram
+# set halfspan to "None" to use automatic halfspan (determined from spatial autocorrelation)
+sampling_density = 0.25  # in pixel units; rec.: 0.25
+edge = 30  # outer edge(+/-) for histograms; rec.: start ~50
 bins_wheel = 50  # number of horizontal/vertical bins for histogram wheels
-binwidth_sum = 5  # binwidth for velocity magnitude histogram,
+binwidth_sum = 2.5  # binwidth for 1D hist.; rec.: start ~5
+kernel_size_general = 20  # kernel for first smoothing step
+kernel_size_flow = 50  # building smoothening kernel needed for flow analysis
 
 ###########################################################
 
@@ -61,7 +60,7 @@ with open(csv_file, "w") as csv_f:  # will overwrite existing
 for stack in inpath.glob("**/*.tif"):  # find all tif files in inpath
 
     # load stack (tif file)
-    Min_st = get_data.load_stack(stack, size, kernel_size, demo=False)
+    Min_st = io.imread(stack)
     stackname = str(stack.stem)
     print(f"Loading {stackname}")
 
@@ -85,6 +84,7 @@ for stack in inpath.glob("**/*.tif"):  # find all tif files in inpath
         edge,  # outer edge (+/-) for velocity wheel and velocity histogram
         bins_wheel,  # number of horizontal/vertical bins for histogram wheels
         binwidth_sum,  # binwidth for velocity magnitude histogram,
+        kernel_size_general,  # kernel for additional smoothing step
         kernel_size_flow,  # building smoothening kernel needed for flow analysis
         look_ahead=1,  # for ridge advancement search: 1=forward, -1 is backward
         demo=True,

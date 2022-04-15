@@ -1,4 +1,4 @@
-def get_auto_halfspan(Min_st, frames_to_analyse, verbose):
+def get_auto_halfspan(Min_st, frames_to_analyse, verbose=True):
     """
     Estimates a suitable value for halfspan to perform local analysis.
     Input: Min stack (3D numpy array), number of frames to analyse (int).
@@ -21,7 +21,6 @@ def get_auto_halfspan(Min_st, frames_to_analyse, verbose):
         first_min_val,
         first_max_pos,
         first_max_val,
-        peak_valley_diff,
     ) = analyze_radial_profiles(crmx_storage, demo=False)
 
     return int(np.mean(first_min_pos))

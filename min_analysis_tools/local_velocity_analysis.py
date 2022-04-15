@@ -1,3 +1,11 @@
+import cv2
+import matplotlib.pyplot as plt
+import numpy as np
+from pyoptflow import HornSchunck
+
+from min_analysis_tools import min_de_patterns_crests, min_de_patterns_velocity
+
+
 def local_velocity_analysis(
     MinDE_st,
     frames_to_analyse=10,  # first ... frames
@@ -6,7 +14,8 @@ def local_velocity_analysis(
     edge=100,  # width of velocity wheel (2D histogram) and max of magnitude histogram
     bins_wheel=50,  # number of bins (horizontal/vertical) for velocity wheel (2D histogram)
     binwidth_sum=10,  # binwidth for velocity mangitude histogram
-    kernel_size_flow=35,  # kernel for additional smoothing step
+    kernel_size_general=20,  # kernel for first smoothing step
+    kernel_size_flow=50,  # kernel for additional smoothing step
     look_ahead=1,  # 1 -> in propagation direction, -1 -> against it
     demo=1,  # return figure handles
 ):
@@ -16,18 +25,17 @@ def local_velocity_analysis(
     @authors: jkerssemakers, M-Sabrina
     Note:for Horn-Schunck, follow install instructions on https://github.com/scivision/pyoptflow
     """
-    import cv2
-    import matplotlib.pyplot as plt
-    import numpy as np
-    from pyoptflow import HornSchunck
-
-    from . import min_de_patterns_crests, min_de_patterns_velocity
-
+    
     # rotate MinDE array to match image directionality
     MinDE_st = min_de_patterns_crests.adjust_stack_orientation(MinDE_st)
 
+    # build kernel for first smoothing step (for processing)
+    general_kernel = np.ones((kernel_size_general, kernel_size_general), np.float32) / (
+        kernel_size_general ** 2
+    )
+
     # build kernel for obtaining flow pattern
-    kernel = np.ones((kernel_size_flow, kernel_size_flow), np.float32) / (
+    flow_kernel = np.ones((kernel_size_flow, kernel_size_flow), np.float32) / (
         kernel_size_flow ** 2
     )
 
@@ -42,26 +50,33 @@ def local_velocity_analysis(
     for fi in range(frames_to_analyse - 1):
         print(f"Working frame {fi} to {fi+1}")
 
-        im0 = MinDE_st[fi, :, :]
-        im1 = MinDE_st[fi + 1, :, :]
+        im0_raw = MinDE_st[fi, :, :]
+        im1_raw = MinDE_st[fi + 1, :, :]
 
-        im0_smz = cv2.filter2D(im0, -1, kernel)
-        im1_smz = cv2.filter2D(im1, -1, kernel)
+        im0_smz = cv2.filter2D(im0_raw, -1, general_kernel)
+        im1_smz = cv2.filter2D(im1_raw, -1, general_kernel)
+
+        im0_smz_flow = cv2.filter2D(im0_smz, -1, flow_kernel)
+        im1_smz_flow = cv2.filter2D(im1_smz, -1, flow_kernel)
 
         # perform flow field analysis on image pair
-        U, V = HornSchunck(im0_smz, im1_smz, alpha=100, Niter=100)
+        U, V = HornSchunck(im0_smz_flow, im1_smz_flow, alpha=100, Niter=100)
         # obtain a binary image with 1 just where the intensity rises (the 'front' of a wave)
-        wavesign_im = min_de_patterns_crests.get_rise_or_fall(U, V, im0, demo=demo)
+        wavesign_im = min_de_patterns_crests.get_rise_or_fall(
+            U, V, im0_smz_flow, demo=demo
+        )
         # crests are the lines of pixels between the rise and the fall of a wave
         (
             crests_x,
             crests_y,
             forward_wavevector_x,
             forward_wavevector_y,
-        ) = min_de_patterns_crests.get_crests(wavesign_im, im0, halfspan / 2, demo=demo)
+        ) = min_de_patterns_crests.get_crests(
+            wavesign_im, im0_smz, halfspan / 2, demo=demo
+        )
         # use wavevect to get start and stop sampling coordinates in the direction of the flow
         profile_map1, xxgrid, yygrid = min_de_patterns_crests.sample_crests(
-            im0,
+            im0_smz,
             crests_x,
             crests_y,
             forward_wavevector_x,
@@ -71,7 +86,7 @@ def local_velocity_analysis(
             demo=demo,
         )
         profile_map2, xxgrid, yygrid = min_de_patterns_crests.sample_crests(
-            im1,
+            im1_smz,
             crests_x,
             crests_y,
             forward_wavevector_x,

@@ -87,9 +87,8 @@ def analyze_peaks(trace, kernel_size=0):
     # get amplitudes of radial correlation function at min and max
     first_max_val = trace[first_max_pos]
     first_min_val = trace[first_min_pos]
-    peak_valley_diff = first_max_val - first_min_val
 
-    return first_min_pos, first_min_val, first_max_pos, first_max_val, peak_valley_diff
+    return first_min_pos, first_min_val, first_max_pos, first_max_val
 
 
 def get_spatial_correlation_matrixes(
@@ -142,8 +141,8 @@ def get_spatial_correlation_matrixes(
                 ax_orig.set_ylabel("y (pixels)")
                 ax_corr.imshow(crmx, extent=[-fx // 2, fx // 2, -fy // 2, fy // 2])
                 ax_corr.set_title("Autocorrelation")
-                ax_corr.set_xlabel("$\Delta$ x (pixels)")
-                ax_corr.set_ylabel("$\Delta$ y (pixels)")
+                ax_corr.set_xlabel("$\Delta$x (pixels)")
+                ax_corr.set_ylabel("$\Delta$y (pixels)")
                 ax_corr.yaxis.set_label_position("right")
                 ax_corr.yaxis.tick_right()
                 plt.subplots_adjust(wspace=0.1)
@@ -176,7 +175,6 @@ def analyze_radial_profiles(
     first_min_val = np.empty(fz)
     first_max_pos = np.empty(fz)
     first_max_val = np.empty(fz)
-    peak_valley_diff = np.empty(fz)
 
     # recognize unit
     if nmperpix is None:
@@ -213,7 +211,6 @@ def analyze_radial_profiles(
                 first_min_val[framesnr],
                 first_max_pos[framesnr],
                 first_max_val[framesnr],
-                peak_valley_diff[framesnr],
             ) = analyze_peaks(radialprofile, kernel_size=int(fx / 100))
         except:
             print(f"Peak analysis not successfull for frame {framesnr+1}")
@@ -221,7 +218,6 @@ def analyze_radial_profiles(
             first_min_val[framesnr] = None
             first_max_pos[framesnr] = None
             first_max_val[framesnr] = None
-            peak_valley_diff[framesnr] = None
 
     # convert positions from pixels to um
     if nmperpix is not None:
@@ -245,7 +241,6 @@ def analyze_radial_profiles(
             first_min_val,
             first_max_pos,
             first_max_val,
-            peak_valley_diff,
             fig,
             ax,
         )
@@ -255,7 +250,6 @@ def analyze_radial_profiles(
             first_min_val,
             first_max_pos,
             first_max_val,
-            peak_valley_diff,
         )
 
 
@@ -321,8 +315,8 @@ def get_temporal_correlation_matrixes(
                     extent=[-ax3 // 2, ax3 // 2, -ax2 // 2, ax2 // 2],
                 )
                 ax_corr.set_title("Autocorrelation")
-                ax_corr.set_xlabel("$\Delta$ t (frames)")
-                ax_corr.set_ylabel(f"$\Delta$ {axis} (pixels)")
+                ax_corr.set_xlabel("$\Delta$t (frames)")
+                ax_corr.set_ylabel(f"$\Delta${axis} (pixels)")
                 ax_corr.yaxis.set_label_position("right")
                 ax_corr.yaxis.tick_right()
                 plt.subplots_adjust(wspace=0.1)
@@ -356,7 +350,6 @@ def analyze_temporal_profiles(
     first_min_val = np.empty(ax1)
     first_max_pos = np.empty(ax1)
     first_max_val = np.empty(ax1)
-    peak_valley_diff = np.empty(ax1)
 
     # recognize unit
     if frpermin is None:
@@ -367,7 +360,7 @@ def analyze_temporal_profiles(
     # prepare figure to plot radial profiles
     if demo > 0:
         fig, ax = plt.subplots(1, 1, figsize=(18 * cm, 10 * cm))
-        ax.set_xlabel(f"$\Delta$ t ({unit})")
+        ax.set_xlabel(f"$\Delta$t ({unit})")
         ax.set_ylabel("autocorrelation (a.u.)")
 
     # plot profiles and calculate characteristic values
@@ -401,7 +394,6 @@ def analyze_temporal_profiles(
                 first_min_val[framesnr],
                 first_max_pos[framesnr],
                 first_max_val[framesnr],
-                peak_valley_diff[framesnr],
             ) = analyze_peaks(prf_tcor)
         except:
             print(f"Peak analysis not successfull for resliced frames {framesnr+1}")
@@ -409,7 +401,6 @@ def analyze_temporal_profiles(
             first_min_val[framesnr] = None
             first_max_pos[framesnr] = None
             first_max_val[framesnr] = None
-            peak_valley_diff[framesnr] = None
 
     # convert positions from pixels to um
     if frpermin is not None:
@@ -433,7 +424,6 @@ def analyze_temporal_profiles(
             first_min_val,
             first_max_pos,
             first_max_val,
-            peak_valley_diff,
             fig,
             ax,
         )
@@ -443,5 +433,4 @@ def analyze_temporal_profiles(
             first_min_val,
             first_max_pos,
             first_max_val,
-            peak_valley_diff,
         )

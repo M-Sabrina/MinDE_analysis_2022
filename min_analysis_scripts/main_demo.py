@@ -4,6 +4,7 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
+from skimage import io
 
 from min_analysis_tools import correlation_tools, get_data
 from min_analysis_tools.get_auto_halfspan import get_auto_halfspan
@@ -37,7 +38,7 @@ class Demo(IntEnum):
 
 
 # Choose action HERE (see options in class "Action" above):
-action = Action.LOCAL_DISTANCES
+action = Action.LOCAL_VELOCITY
 
 # Choose example dataset HERE (see options in class "Selection" above):
 selection = Selection.SPIRAL
@@ -45,9 +46,7 @@ selection = Selection.SPIRAL
 # Choose level of output graphics HERE (see options in class "Demo" above):
 demo = Demo.DEFAULT
 
-# General / display parameters
-size = 512  # data will be downsized to this (set "None" to skip)
-kernel_size = 15  # kernel size for initial image smoothening (set "None" to skip)
+# General parameters
 frames_to_analyse = 5  # set at a very large number to analyse all frames
 
 # Global temporal autocorrelation analysis parameters
@@ -57,7 +56,8 @@ kymoband = 0.8  # analyse middle ... part of image
 # Local analysis parameters
 halfspan = None  # halfspan for velocities / distances (ideally ~ wavelength/2)
 # set halfspan to "None" to use automatic halfspan (determined from spatial autocorrelation)
-kernel_size_flow = 35  # building smoothening kernel needed for flow analysis
+kernel_size_general = 20  # kernel for first smoothing step
+kernel_size_flow = 50  # building smoothening kernel needed for flow analysis
 
 ###########################################################
 
@@ -100,20 +100,29 @@ if action == action.LOCAL_DISTANCES:
     stack_path_D = stem / "example_data" / "real_dual_D.tif"
     stack_path_E = stem / "example_data" / "real_dual_E.tif"
     print("Selection set to dual channel example")
-    MinE_st, fig_E, ax_E = get_data.load_stack(
-        stack_path_E, size=size, kernel_size=kernel_size, demo=True
-    )
+    MinE_st = io.imread(stack_path_E)
+    fig_E, ax_E = plt.subplots(1, 1)
+    ax_E.imshow(MinE_st[0, :, :])
+    ax_E.set_title("pattern")
+    ax_E.set_xlabel("x (pixels)")
+    ax_E.set_ylabel("y (pixels)")
     ax_E.set_title("MinE stack")
     fig_E.show()
-    MinD_st, fig_D, ax_D = get_data.load_stack(
-        stack_path_D, size=size, kernel_size=kernel_size, demo=True
-    )
+    MinD_st = io.imread(stack_path_D)
+    fig_D, ax_D = plt.subplots(1, 1)
+    ax_D.imshow(MinE_st[0, :, :])
+    ax_D.set_title("pattern")
+    ax_D.set_xlabel("x (pixels)")
+    ax_D.set_ylabel("y (pixels)")
     ax_D.set_title("MinD stack")
     fig_D.show()
 else:
-    Min_st, fig, ax = get_data.load_stack(
-        stack_path, size=size, kernel_size=kernel_size, demo=True
-    )
+    Min_st = io.imread(stack_path)
+    fig, ax = plt.subplots(1, 1)
+    ax.imshow(Min_st[0, :, :])
+    ax.set_title("pattern")
+    ax.set_xlabel("x (pixels)")
+    ax.set_ylabel("y (pixels)")
     fig.show()
 
 ###########################################################
@@ -140,7 +149,6 @@ if action == Action.GLOBAL_SPATIAL:
         first_min_val,
         first_max_pos,
         first_max_val,
-        peak_valley_diff,
         fig,
         ax,
     ) = correlation_tools.analyze_radial_profiles(crmx_storage)
@@ -148,7 +156,6 @@ if action == Action.GLOBAL_SPATIAL:
 
     print(f"mean position of first valley: {np.mean(first_min_pos):.02f}")
     print(f"mean position of first peak (!): {np.mean(first_max_pos):.02f}")
-    print(f"mean peak-valley difference: {np.mean(peak_valley_diff):.02f}")
 
 ###########################################################
 
@@ -193,7 +200,6 @@ elif action == Action.GLOBAL_TEMPORAL:
             first_min_val,
             first_max_pos,
             first_max_val,
-            peak_valley_diff,
             fig,
             ax,
         ) = correlation_tools.analyze_temporal_profiles(
@@ -209,17 +215,14 @@ elif action == Action.GLOBAL_TEMPORAL:
             tmp_first_min_val = first_min_val
             tmp_first_max_pos = first_max_pos
             tmp_first_max_val = first_max_val
-            tmp_peak_valley_diff = peak_valley_diff
         if axis == "y":  # second time: join arrays from x- and y-slices
             first_min_pos = np.append(tmp_first_min_pos, first_min_pos)
             first_min_val = np.append(tmp_first_min_val, first_min_val)
             first_max_pos = np.append(tmp_first_max_pos, first_max_pos)
             first_max_val = np.append(tmp_first_max_val, first_max_val)
-            peak_valley_diff = np.append(tmp_peak_valley_diff, peak_valley_diff)
 
     print(f"mean position of first valley: {np.mean(first_min_pos):.02f}")
     print(f"mean position of first peak (!): {np.mean(first_max_pos):.02f}")
-    print(f"mean peak-valley difference: {np.mean(peak_valley_diff):.02f}")
 
 ###########################################################
 
@@ -228,7 +231,7 @@ elif action == Action.GLOBAL_TEMPORAL:
 elif action == Action.LOCAL_VELOCITY:
 
     if halfspan is None:
-        halfspan = get_auto_halfspan(Min_st, frames_to_analyse)
+        halfspan = get_auto_halfspan(Min_st, frames_to_analyse, verbose=True)
         print(f"Auto-halfspan determined: {halfspan} pixels")
 
     (
@@ -247,7 +250,8 @@ elif action == Action.LOCAL_VELOCITY:
         edge=50,  # outer edge (+/-) for velocity wheel and velocity histogram
         bins_wheel=50,  # number of horizontal/vertical bins for histogram wheels
         binwidth_sum=5,  # binwidth for velocity magnitude histogram,
-        kernel_size_flow=kernel_size_flow,  # building smoothening kernel needed for flow analysis
+        kernel_size_general=kernel_size_general,  # kernel for first smoothing step
+        kernel_size_flow=kernel_size_flow,  # kernel for additional smoothing step
         look_ahead=1,  # for ridge advancement search: 1=forward, -1 is backward
         demo=demo,
     )
@@ -280,7 +284,8 @@ elif action == Action.LOCAL_DISTANCES:
         edge=5,  # outer edge (+/-) for DE-shift wheel and velocity histogram
         bins_wheel=50,  # number of horizontal/vertical bins for histogram wheels
         binwidth_sum=1,  # binwidth for distance histogram
-        kernel_size_flow=35,  # building smoothening kernel needed for flow analysis
+        kernel_size_general=kernel_size_general,  # kernel for first smoothing step
+        kernel_size_flow=kernel_size_flow,  # building smoothening kernel needed for flow analysis
         look_ahead=-1,  # for ridge advancement search: -1 is backward, assume E follows D
         demo=demo,
     )

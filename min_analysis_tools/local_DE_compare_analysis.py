@@ -1,3 +1,11 @@
+import cv2
+import matplotlib.pyplot as plt
+import numpy as np
+from pyoptflow import HornSchunck
+
+from min_analysis_tools import min_de_patterns_crests, min_de_patterns_velocity
+
+
 def local_DE_compare_analysis(
     MinD_st,
     MinE_st,
@@ -7,6 +15,7 @@ def local_DE_compare_analysis(
     edge=10,  # width of 2D histogram and max of 1D histogram
     bins_wheel=50,  # number of bins (horizontal/vertical) for velocity wheel (2D histogram)
     binwidth_sum=2.5,  # binwidth for velocity mangitude histogram
+    kernel_size_general=20,  # kernel for first smoothing step
     kernel_size_flow=35,  # kernel for additional smoothing step
     look_ahead=-1,  # 1 -> in propagation direction, -1 -> against it
     demo=1,  # return figure handles
@@ -17,20 +26,19 @@ def local_DE_compare_analysis(
     @authors: jkerssemakers, M-Sabrina
     Note:for Horn-Schunck, follow install instructions on https://github.com/scivision/pyoptflow
     """
-    import cv2
-    import matplotlib.pyplot as plt
-    import numpy as np
-    from pyoptflow import HornSchunck
-
-    from . import min_de_patterns_crests, min_de_patterns_velocity
 
     # rotate both Min stacks to match image directionality
     MinD_st = min_de_patterns_crests.adjust_stack_orientation(MinD_st)
     MinE_st = min_de_patterns_crests.adjust_stack_orientation(MinE_st)
 
+    # build kernel for first smoothing step (for processing)
+    general_kernel = np.ones((kernel_size_general, kernel_size_general), np.float32) / (
+        kernel_size_general**2
+    )
+
     # build kernel for obtaining flow pattern
-    kernel = np.ones((kernel_size_flow, kernel_size_flow), np.float32) / (
-        kernel_size_flow ** 2
+    flow_kernel = np.ones((kernel_size_flow, kernel_size_flow), np.float32) / (
+        kernel_size_flow**2
     )
 
     # work frames
@@ -43,28 +51,32 @@ def local_DE_compare_analysis(
     for fi in range(frames_to_analyse - 1):
         print(f"Working frame {fi} to {fi+1}")
 
-        imD0 = MinD_st[fi, :, :]
-        imD1 = MinD_st[fi + 1, :, :]
-        imE0 = MinE_st[fi, :, :]
+        imD0_raw = MinD_st[fi, :, :]
+        imD1_raw = MinD_st[fi + 1, :, :]
+        imE0_raw = MinE_st[fi, :, :]
 
-        imD0_smz = cv2.filter2D(imD0, -1, kernel)
-        imD1_smz = cv2.filter2D(imD1, -1, kernel)
+        imD0_smz = cv2.filter2D(imD0_raw, -1, general_kernel)
+        imD1_smz = cv2.filter2D(imD1_raw, -1, general_kernel)
+        imE0_smz = cv2.filter2D(imE0_raw, -1, general_kernel)
+
+        imD0_smz_flow = cv2.filter2D(imD0_smz, -1, flow_kernel)
+        imD1_smz_flow = cv2.filter2D(imD1_smz, -1, flow_kernel)
 
         # perform flow field analysis on image pair. note we use minD for optical flow
-        U, V = HornSchunck(imD0_smz, imD1_smz, alpha=100, Niter=100)
+        U, V = HornSchunck(imD0_smz_flow, imD1_smz_flow, alpha=100, Niter=100)
         # obtain a binary image with 1 just where the intensity rises (the 'front' of a wave)
-        wavesign_im = min_de_patterns_crests.get_rise_or_fall(U, V, imD0, demo=demo)
+        wavesign_im = min_de_patterns_crests.get_rise_or_fall(U, V, imD0_raw, demo=demo)
         # crests are the lines of pixels between the rise and the fall of a wave
         (
             crests_x,
             crests_y,
             forward_wavevector_x,
             forward_wavevector_y,
-        ) = min_de_patterns_crests.get_crests(wavesign_im, imD0, 10, demo=demo)
+        ) = min_de_patterns_crests.get_crests(wavesign_im, imD0_smz, 10, demo=demo)
 
         # use wavevect to get start and stop sampling coordinates in the direction of the flow
         profile_map1, xxgrid, yygrid = min_de_patterns_crests.sample_crests(
-            imD0,
+            imD0_smz,
             crests_x,
             crests_y,
             forward_wavevector_x,
@@ -74,7 +86,7 @@ def local_DE_compare_analysis(
             demo=demo,
         )
         profile_map2, xxgrid, yygrid = min_de_patterns_crests.sample_crests(
-            imE0,
+            imE0_smz,
             crests_x,
             crests_y,
             forward_wavevector_x,

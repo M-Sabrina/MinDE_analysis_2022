@@ -4,11 +4,23 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
+from skimage import io
 
-from min_analysis_tools import correlation_tools, get_data
+from min_analysis_tools import correlation_tools
 from min_analysis_tools.get_auto_halfspan import get_auto_halfspan
 from min_analysis_tools.local_DE_compare_analysis import local_DE_compare_analysis
 from min_analysis_tools.local_velocity_analysis import local_velocity_analysis
+
+# Plot settings:
+plt.rc("font", size=10)  # controls default text size
+plt.rc("axes", titlesize=10)  # fontsize of the title
+plt.rc("axes", labelsize=10)  # fontsize of the x and y labels
+plt.rc("xtick", labelsize=10)  # fontsize of the x tick labels
+plt.rc("ytick", labelsize=10)  # fontsize of the y tick labels
+plt.rc("legend", fontsize=6)  # fontsize of the legend
+plt.rcParams.update({"font.family": "arial"})
+cm = 1 / 2.54  # centimeters in inches (for matplotlib figure size)
+fig_size = (12 * cm, 4.5 * cm)
 
 
 class Action(Enum):
@@ -19,16 +31,14 @@ class Action(Enum):
 
 
 # Choose action HERE (see list in class "Action" above):
-action = Action.GLOBAL_SPATIAL
+action = Action.LOCAL_VELOCITY
 
 # General / display parameters:
-size = 512  # data will be downsized to this (set "None" to skip)
-kernel_size = 15  # kernel size for initial image smoothening (set "None" to skip)
-frames_to_analyse = 5  # set at a very large number to analyse all frames
+frames_to_analyse = 10  # integer; set to a very large number to analyse all frames
 
 # Stack information (set both to None to work with pixel and frames only):
-nmperpix = 594  # nanometer per pixel (assuming aspect ratio = 1)
-frpermin = 4  # frames per minute
+nmperpix = None  # nanometer per pixel (assuming aspect ratio = 1)
+frpermin = None  # frames per minute
 
 # Temporal autocorrelation analysis parameters:
 reps_per_kymostack = 5  # pick ... kymographs around middle
@@ -37,7 +47,12 @@ kymoband = 0.8  # analyse middle ... part of image
 # Local analysis parameters:
 halfspan = None  # halfspan for velocities / distances (ideally ~ wavelength/2)
 # set halfspan to "None" to use automatic halfspan (determined from spatial autocorrelation)
-kernel_size_flow = 35  # building smoothening kernel needed for flow analysis
+sampling_density = 0.25  # in pixel units; rec.: 0.25 for vel. / 1 for DE-shift
+edge = 30  # outer edge(+/-) for histograms; rec.: start ~50 for vel. / ~10 for DE-shift
+bins_wheel = 50  # number of horizontal/vertical bins for histogram wheels
+binwidth_sum = 2.5  # binwidth for 1D hist.; rec.: start ~5 for vel. / ~1 for DE-shift
+kernel_size_general = 15  # kernel for first smoothing step
+kernel_size_flow = 50  # building smoothening kernel needed for flow analysis
 
 # Define stack_path -> SET
 # single file (actions 1, 2, 3)
@@ -55,12 +70,12 @@ if not outpath.is_dir():
 
 # load stack
 if action == Action.LOCAL_DISTANCES:
-    MinE_st = get_data.load_stack(in_E, size=size, kernel_size=kernel_size)
+    MinE_st = io.imread(in_E)
     stackname_E = in_E.stem
-    MinD_st = get_data.load_stack(in_D, size=size, kernel_size=kernel_size)
+    MinD_st = io.imread(in_D)
     stackname_D = in_D.stem
 else:
-    Min_st = get_data.load_stack(infile, size=size, kernel_size=kernel_size)
+    Min_st = io.imread(infile)
     stackname = infile.stem
 
 ###########################################################
@@ -86,6 +101,8 @@ if action == Action.GLOBAL_SPATIAL:
         frames_to_analyse,
     )
     example_fig_path = outpath / f"{stackname}_spatial_autocorr.png"
+    fig.set_size_inches(fig_size)
+    fig.tight_layout()
     fig.savefig(example_fig_path, dpi=500)
     plt.close(fig)
 
@@ -96,17 +113,17 @@ if action == Action.GLOBAL_SPATIAL:
         first_min_val,
         first_max_pos,
         first_max_val,
-        peak_valley_diff,
         fig,
         ax,
     ) = correlation_tools.analyze_radial_profiles(crmx_storage, nmperpix)
     profile_fig_path = outpath / f"{stackname}_radialprofiles.png"
+    fig.set_size_inches(fig_size)
+    fig.tight_layout()
     fig.savefig(profile_fig_path, dpi=500)
     plt.close(fig)
 
-    print(f"mean position of first valley: {np.mean(first_min_pos):.02f} {unit}")
-    print(f"mean position of first peak (!): {np.mean(first_max_pos):.02f} {unit}")
-    print(f"mean peak-valley difference: {np.mean(peak_valley_diff):.02f}")
+    print(f"mean position of first valley: {np.nanmean(first_min_pos):.02f} {unit}")
+    print(f"mean position of first peak (!): {np.nanmean(first_max_pos):.02f} {unit}")
 
     # create csv file for saving characteristic parameters later
     csv_file = outpath / f"{stackname}_spatial_autocorrelation_results.csv"
@@ -117,7 +134,6 @@ if action == Action.GLOBAL_SPATIAL:
         "valley_val",  # amplitude of first minimum
         f"peak_pos ({unit})",  # position of first maximum --> wavelength
         "peak_val",  # amplitude of first maximum
-        "peak_valley_diff",
     ]
     with open(csv_file, "w") as csv_f:  # will overwrite existing
         writer = csv.writer(csv_f, delimiter="\t")
@@ -130,7 +146,6 @@ if action == Action.GLOBAL_SPATIAL:
                     first_min_val[n],
                     first_max_pos[n],
                     first_max_val[n],
-                    peak_valley_diff[n],
                 ]
             )
 
@@ -163,7 +178,6 @@ elif action == Action.GLOBAL_TEMPORAL:
         "valley_val",  # amplitude of first minimum
         f"peak_pos ({unit})",  # position of first maximum --> oscillation period
         "peak_val",  # amplitude of first maximum
-        "peak_valley_diff",
     ]
     with open(csv_file_path, "w") as csv_f:  # will overwrite existing
         # create the csv writer
@@ -192,7 +206,9 @@ elif action == Action.GLOBAL_TEMPORAL:
             kymoband,
             reps_per_kymostack,
         )
-        example_fig_path = outpath / f"{stackname}_{axis}t_temporal_autocorr.png"
+        example_fig_path = outpath / f"{stackname}_t{axis}_temporal_autocorr.png"
+        fig.set_size_inches(fig_size)
+        fig.tight_layout()
         fig.savefig(example_fig_path, dpi=500)
         plt.close(fig)
 
@@ -203,7 +219,6 @@ elif action == Action.GLOBAL_TEMPORAL:
             first_min_val,
             first_max_pos,
             first_max_val,
-            peak_valley_diff,
             fig,
             ax,
         ) = correlation_tools.analyze_temporal_profiles(
@@ -213,6 +228,8 @@ elif action == Action.GLOBAL_TEMPORAL:
             frpermin,
         )
         profile_fig_path = outpath / f"{stackname}_t{axis}_profiles.png"
+        fig.set_size_inches(fig_size)
+        fig.tight_layout()
         fig.savefig(profile_fig_path, dpi=500)
 
         # store characteristc parameters in csv and output average to console
@@ -232,7 +249,6 @@ elif action == Action.GLOBAL_TEMPORAL:
                             first_min_val[n],
                             first_max_pos[n],
                             first_max_val[n],
-                            peak_valley_diff[n],
                         ]
                     )
             # first time: store values for averaging later
@@ -240,7 +256,6 @@ elif action == Action.GLOBAL_TEMPORAL:
             tmp_first_min_val = first_min_val
             tmp_first_max_pos = first_max_pos
             tmp_first_max_val = first_max_val
-            tmp_peak_valley_diff = peak_valley_diff
 
         if axis == "y":
 
@@ -257,7 +272,6 @@ elif action == Action.GLOBAL_TEMPORAL:
                             first_min_val[n],
                             first_max_pos[n],
                             first_max_val[n],
-                            peak_valley_diff[n],
                         ]
                     )
 
@@ -266,11 +280,9 @@ elif action == Action.GLOBAL_TEMPORAL:
             first_min_val = np.append(tmp_first_min_val, first_min_val)
             first_max_pos = np.append(tmp_first_max_pos, first_max_pos)
             first_max_val = np.append(tmp_first_max_val, first_max_val)
-            peak_valley_diff = np.append(tmp_peak_valley_diff, peak_valley_diff)
 
-    print(f"mean position of first valley: {np.mean(first_min_pos):.02f} {unit}")
-    print(f"mean position of first peak (!): {np.mean(first_max_pos):.02f} {unit}")
-    print(f"mean peak-valley difference: {np.mean(peak_valley_diff):.02f}")
+    print(f"mean position of first valley: {np.nanmean(first_min_pos):.02f} {unit}")
+    print(f"mean position of first peak (!): {np.nanmean(first_max_pos):.02f} {unit}")
 
 ###########################################################
 
@@ -292,18 +304,22 @@ elif action == Action.LOCAL_VELOCITY:
         ax_sum,
     ) = local_velocity_analysis(
         Min_st,
-        frames_to_analyse=frames_to_analyse,
-        halfspan=halfspan,  # halfspan for get_velocities (ideally ~ wavelength/2)
-        sampling_density=0.25,  # in pixel units
-        edge=50,  # outer edge (+/-) for velocity wheel and velocity histogram
-        bins_wheel=50,  # number of horizontal/vertical bins for histogram wheels
-        binwidth_sum=5,  # binwidth for velocity magnitude histogram,
-        kernel_size_flow=kernel_size_flow,  # building smoothening kernel needed for flow analysis
+        frames_to_analyse,
+        halfspan,  # halfspan for get_velocities (ideally ~ wavelength/2)
+        sampling_density,  # in pixel units
+        edge,  # outer edge (+/-) for velocity wheel and velocity histogram
+        bins_wheel,  # number of horizontal/vertical bins for histogram wheels
+        binwidth_sum,  # binwidth for velocity magnitude histogram,
+        kernel_size_general,  # kernel for first smoothing step
+        kernel_size_flow,  # kernel for additional smoothing step
         look_ahead=1,  # for ridge advancement search: 1=forward, -1 is backward
         demo=True,
     )
 
     savename = outpath / f"{stackname}_velocity_wheel.png"
+    fig.set_size_inches(fig_size)
+    ax_sum.set_ylim((0, 1000))
+    fig.tight_layout()
     fig.savefig(savename, dpi=500)
     plt.close(fig)
 
@@ -362,17 +378,20 @@ elif action == Action.LOCAL_DISTANCES:
     ) = local_DE_compare_analysis(
         MinD_st,
         MinE_st,
-        frames_to_analyse=frames_to_analyse,
-        halfspan=halfspan,  # halfspan for distances (ideally ~ wavelength/2)
-        sampling_density=1,  # in pixel units
-        edge=10,  # outer edge (+/-) for DE-shift wheel and histogram
-        bins_wheel=50,  # number of horizontal/vertical bins for histogram wheels
-        binwidth_sum=1,  # binwidth for distance histogram
-        kernel_size_flow=kernel_size_flow,  # building smoothening kernel needed for flow analysis
+        frames_to_analyse,
+        halfspan,  # halfspan for distances (ideally ~ wavelength/2)
+        sampling_density,  # in pixel units
+        edge,  # outer edge (+/-) for DE-shift wheel and histogram
+        bins_wheel,  # number of horizontal/vertical bins for histogram wheels
+        binwidth_sum,  # binwidth for distance histogram
+        kernel_size_general,  # kernel for additional smoothing step
+        kernel_size_flow,  # building smoothening kernel needed for flow analysis
         look_ahead=-1,  # for ridge advancement search: -1 is backward, E follows D
         demo=True,
     )
     savename = outpath / f"{stackname_D}_DE_distance_wheel.png"
+    fig.set_size_inches(fig_size)
+    fig.tight_layout()
     fig.savefig(savename, dpi=500)
     plt.close(fig)
 
