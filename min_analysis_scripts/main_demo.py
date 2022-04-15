@@ -24,7 +24,7 @@ class Action(Enum):
 class Selection(Enum):
     SIMULATION = 0  # simple simulated spiral
     SPIRAL = 1  # Min spiral (example data)
-    NORTHWEST = 2  # Min northwest-directed traveling waves (example data)
+    SOUTHEAST = 2  # Min southeast-directed traveling waves (example data)
     STITCH_HORIZONTAL = 3  # Min large horizontally stitched pattern (example data)
     STITCH_SQUARE = 4  # Min large square stitched pattern (example data)
     DUAL_SPIRAL = 5  # Min spiral dataset for dual-channel analysis (example data)
@@ -75,10 +75,10 @@ elif selection == Selection.SPIRAL:  # Min spiral (example data)
     stack_path = stem / "example_data" / "real_spiral.tif"
     stackname = "spiral"
 elif (
-    selection == Selection.NORTHWEST
+    selection == Selection.SOUTHEAST
 ):  # Min northwest-directed traveling waves (example data)
-    stack_path = stem / "example_data" / "real_northwest.tif"
-    stackname = "northwest"
+    stack_path = stem / "example_data" / "real_southeast.tif"
+    stackname = "southeast"
 elif (
     selection == Selection.STITCH_HORIZONTAL
 ):  # Min large horizontally stitched pattern (example data)
