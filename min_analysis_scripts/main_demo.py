@@ -38,7 +38,7 @@ class Demo(IntEnum):
 
 
 # Choose action HERE (see options in class "Action" above):
-action = Action.LOCAL_VELOCITY
+action = Action.GLOBAL_SPATIAL
 
 # Choose example dataset HERE (see options in class "Selection" above):
 selection = Selection.SPIRAL

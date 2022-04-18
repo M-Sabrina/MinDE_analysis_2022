@@ -31,7 +31,7 @@ class Action(Enum):
 
 
 # Choose action HERE (see list in class "Action" above):
-action = Action.LOCAL_VELOCITY
+action = Action.GLOBAL_SPATIAL
 
 # General / display parameters:
 frames_to_analyse = 10  # integer; set to a very large number to analyse all frames
