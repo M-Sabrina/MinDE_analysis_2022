@@ -1,3 +1,16 @@
+"""
+MinDE pattern local velocity analysis
+
+Input: directory with pre-cleaned movies as tif files (3D).
+Output: png files showing results in 2D and 1D histogram, csv file for velocities
+(magnitudes and unit vector components).
+
+Reference: Cees Dekker Lab; project: MinDE; researcher: Sabrina Meindlhumer.
+Code designed & written in MatLab by Jacob Kerssemakers, 2016.
+Rewritten to Python by Sabrina Meindlhumer, 2022.
+
+"""
+
 import csv
 from pathlib import Path
 

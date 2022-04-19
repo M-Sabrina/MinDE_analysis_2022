@@ -15,7 +15,7 @@ def local_velocity_analysis(
     bins_wheel=50,  # number of bins (horizontal/vertical) for velocity wheel (2D histogram)
     binwidth_sum=10,  # binwidth for velocity mangitude histogram
     kernel_size_general=20,  # kernel for first smoothing step
-    kernel_size_flow=50,  # kernel for additional smoothing step
+    kernel_size_flow=35,  # kernel for additional smoothing step
     look_ahead=1,  # 1 -> in propagation direction, -1 -> against it
     demo=1,  # return figure handles
 ):
@@ -25,18 +25,18 @@ def local_velocity_analysis(
     @authors: jkerssemakers, M-Sabrina
     Note:for Horn-Schunck, follow install instructions on https://github.com/scivision/pyoptflow
     """
-    
+
     # rotate MinDE array to match image directionality
     MinDE_st = min_de_patterns_crests.adjust_stack_orientation(MinDE_st)
 
     # build kernel for first smoothing step (for processing)
     general_kernel = np.ones((kernel_size_general, kernel_size_general), np.float32) / (
-        kernel_size_general ** 2
+        kernel_size_general**2
     )
 
     # build kernel for obtaining flow pattern
     flow_kernel = np.ones((kernel_size_flow, kernel_size_flow), np.float32) / (
-        kernel_size_flow ** 2
+        kernel_size_flow**2
     )
 
     # work all frames
