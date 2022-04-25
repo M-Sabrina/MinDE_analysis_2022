@@ -17,8 +17,7 @@ Characteristic parameters are:
     "peak_val" - amplitude of first maximum
 
 Reference: Cees Dekker Lab; project: MinDE; researcher: Sabrina Meindlhumer.
-Code designed & written in MatLab by Jacob Kerssemakers, 2016.
-Rewritten to Python by Sabrina Meindlhumer, 2022.
+Code designed & written by Jacob Kerssemakers and Sabrina Meindlhumer, 2022.
 """
 
 import csv

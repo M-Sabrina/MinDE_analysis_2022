@@ -1,14 +1,18 @@
 """
 MinDE pattern local velocity analysis
 
+Local velocity analysis is performed by
+1. identifying individual wave crest positions, using optical flow analysis (using Horn-
+   Schunck algorithm)
+2. calculating the peak shift from one frame to the next, relying on multi-point parabolic
+   fitting of intensity traces in direction of wave propagation for both frames
+
 Input: directory with pre-cleaned movies as tif files (3D).
 Output: png files showing results in 2D and 1D histogram, csv file for velocities
 (magnitudes and unit vector components).
 
 Reference: Cees Dekker Lab; project: MinDE; researcher: Sabrina Meindlhumer.
-Code designed & written in MatLab by Jacob Kerssemakers, 2016.
-Rewritten to Python by Sabrina Meindlhumer, 2022.
-
+Code designed & written by Jacob Kerssemakers and Sabrina Meindlhumer, 2022.
 """
 
 import csv
@@ -32,7 +36,7 @@ frames_to_analyse = 10  # analyse first ... frames per stack
 # Local analysis parameters -> SET
 halfspan = None  # halfspan for velocities / distances (ideally ~ wavelength/2)
 # set halfspan to "None" to use automatic halfspan (determined from spatial autocorrelation)
-sampling_density = 0.25  # in pixel units; rec.: 0.25
+sampling_density = 0.25  # in pixel units
 edge = 30  # outer edge(+/-) for histograms; rec.: start ~50
 bins_wheel = 50  # number of horizontal/vertical bins for histogram wheels
 binwidth_sum = 2.5  # binwidth for 1D hist.; rec.: start ~5

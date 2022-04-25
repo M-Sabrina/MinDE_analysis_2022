@@ -1,13 +1,13 @@
 """
-For temporal correlation, we generate N x-t or y-t kymographs per movie evenly
-distributed over a set middle fraction fraction of an image (N/2 in x direction and
-N/2 in y direction). For each such kymograph, autocorrelation analysis is performed.
+For temporal correlation, we generate several x-t or y-t kymographs per movie evenly
+distributed over a set middle fraction fraction of an image. For each such kymograph, 
+autocorrelation analysis is performed.
 The Δx=0 or Δy=0 line of these y-t or x-t autocorrelation maps then in effect represents a
 temporal correlation curve averaged over all the original image points on this line. Next,
-these correlation curves are mean averaged between different kymographs. Thus, the final
-correlation curve in effect represents the average temporal correlation signal sampled from
-selected surface locations. Analogous to the spatial correlation analysis, the first maximum
-after Δt=0 indicates a main oscillation period.
+these correlation curves are averaged between different kymographs. Thus, the final correlation
+curve in effect represents the average temporal correlation signal sampled from selected surface
+locations. Analogous to the spatial correlation analysis, the first maximum after Δt=0 indicates
+a main oscillation period.
 
 Input: directory with pre-cleaned movies as tif files (3D).
 Output: png files for autocorrelation curves, csv file for characteristic parameters.
@@ -19,8 +19,7 @@ Characteristic parameters are:
     "peak_val" - amplitude of first maximum
 
 Reference: Cees Dekker Lab; project: MinDE; researcher: Sabrina Meindlhumer.
-Code designed & written in MatLab by Jacob Kerssemakers, 2016.
-Rewritten to Python by Sabrina Meindlhumer, 2022.
+Code designed & written by Jacob Kerssemakers and Sabrina Meindlhumer, 2022.
 """
 import csv
 from pathlib import Path

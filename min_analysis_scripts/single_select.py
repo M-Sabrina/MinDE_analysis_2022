@@ -1,3 +1,22 @@
+"""
+This file serves as a tool for quick analysis of a given Min pattern stack.
+It is thus similar to the notebook "Quickstart_Min_analysis.ipynb", with differs
+from it insofar as it will save the output (png and csv files) in a directory
+"results" within the set inpath.
+
+Input: Pre-cleaned Min pattern stack (tif file, 3D)
+Output: Png and csv files with characteristic paramters, depending on analysis
+
+To start, pick one out of 4 provided actions from the class "Actions" below
+by setting the path to the file in the variable "inpath" (or separately in 
+"in_E" and "in_D" for local distance analysis).
+Set the input parameters for either global or local analysis, then run the script.
+See comments below for more details on the individual parameters.
+
+Reference: Cees Dekker Lab; project: MinDE; researcher: Sabrina Meindlhumer.
+Code designed & written by Jacob Kerssemakers and Sabrina Meindlhumer, 2022.
+"""
+
 import csv
 from enum import IntEnum
 from pathlib import Path
@@ -47,10 +66,10 @@ kymoband = 0.8  # analyse middle ... part of image
 # Local analysis parameters:
 halfspan = None  # halfspan for velocities / distances (ideally ~ wavelength/2)
 # set halfspan to "None" to use automatic halfspan (determined from spatial autocorrelation)
-sampling_density = 0.25  # in pixel units; rec.: 0.25 for vel. / 1 for DE-shift
-edge = 30  # outer edge(+/-) for histograms; rec.: start ~50 for vel. / ~10 for DE-shift
+sampling_density = 0.25  # in pixel units
+edge = 30  # outer edge(+/-) for histograms; start with ~50 for vel. / ~10 for DE-shift
 bins_wheel = 50  # number of horizontal/vertical bins for histogram wheels
-binwidth_sum = 2.5  # binwidth for 1D hist.; rec.: start ~5 for vel. / ~1 for DE-shift
+binwidth_sum = 2.5  # binwidth for 1D hist
 kernel_size_general = 15  # kernel for first smoothing step
 kernel_size_flow = 35  # building smoothening kernel needed for flow analysis
 

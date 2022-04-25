@@ -1,4 +1,23 @@
-from enum import Enum, IntEnum
+"""
+This file serves as a demonstration of the tools provided within this package,
+showing results for simulated as well as real example data.
+Hence, it fulfills a similar function as the DEMO Jupyter notebooks, but
+in a script format and with a stronger focus on functionality rather than
+illustration.
+
+The user can choose from the provided example data sets (class "Selection")
+and choose one out of four analysis types to be performed on the data set
+(class "Action"). The possible actions are Global Spatial Analysis, Global
+Temporal Analysis, Local Velocity Analysis and Local MinDE-Distance Analysis.
+Input data is provided in the folder "example_data".
+To start the demonstation, scroll down and set parameters as well as data
+set and action, then run the script.
+
+Reference: Cees Dekker Lab; project: MinDE; researcher: Sabrina Meindlhumer.
+Code designed & written by Jacob Kerssemakers and Sabrina Meindlhumer, 2022.
+"""
+
+from enum import IntEnum
 from os.path import abspath, dirname
 from pathlib import Path
 
@@ -13,7 +32,7 @@ from min_analysis_tools.local_velocity_analysis import local_velocity_analysis
 
 
 # Options for actions to perform (choose below):
-class Action(Enum):
+class Action(IntEnum):
     GLOBAL_SPATIAL = 1  # -> spatial autocorrelation
     GLOBAL_TEMPORAL = 2  # -> temporal autocorrelation
     LOCAL_VELOCITY = 3  # -> local velocity analysis
@@ -21,7 +40,7 @@ class Action(Enum):
 
 
 # Options for exemplary dataset to use (choose below):
-class Selection(Enum):
+class Selection(IntEnum):
     SIMULATION = 0  # simple simulated spiral
     SPIRAL = 1  # Min spiral (example data)
     SOUTHEAST = 2  # Min southeast-directed traveling waves (example data)
@@ -41,7 +60,7 @@ class Demo(IntEnum):
 action = Action.GLOBAL_SPATIAL
 
 # Choose example dataset HERE (see options in class "Selection" above):
-selection = Selection.WEST
+selection = Selection.SPIRAL
 
 # Choose level of output graphics HERE (see options in class "Demo" above):
 demo = Demo.DEFAULT
@@ -109,7 +128,7 @@ if action == action.LOCAL_DISTANCES:
     fig_E.show()
     MinD_st = io.imread(stack_path_D)
     fig_D, ax_D = plt.subplots(1, 1)
-    ax_D.imshow(MinE_st[0, :, :])
+    ax_D.imshow(MinD_st[0, :, :])
     ax_D.set_title("pattern")
     ax_D.set_xlabel("x (pixels)")
     ax_D.set_ylabel("y (pixels)")
@@ -153,8 +172,8 @@ if action == Action.GLOBAL_SPATIAL:
     ) = correlation_tools.analyze_radial_profiles(crmx_storage)
     fig.show()
 
-    print(f"mean position of first valley: {np.mean(first_min_pos):.02f}")
-    print(f"mean position of first peak (!): {np.mean(first_max_pos):.02f}")
+    print(f"mean position of first valley: {np.mean(first_min_pos):.02f} pixels")
+    print(f"mean position of first peak (!): {np.mean(first_max_pos):.02f} pixels")
 
 ###########################################################
 
@@ -220,8 +239,8 @@ elif action == Action.GLOBAL_TEMPORAL:
             first_max_pos = np.append(tmp_first_max_pos, first_max_pos)
             first_max_val = np.append(tmp_first_max_val, first_max_val)
 
-    print(f"mean position of first valley: {np.mean(first_min_pos):.02f}")
-    print(f"mean position of first peak (!): {np.mean(first_max_pos):.02f}")
+    print(f"mean position of first valley: {np.mean(first_min_pos):.02f} frames")
+    print(f"mean position of first peak (!): {np.mean(first_max_pos):.02f} frames")
 
 ###########################################################
 
@@ -279,8 +298,8 @@ elif action == Action.LOCAL_DISTANCES:
         MinE_st,
         frames_to_analyse=frames_to_analyse,
         halfspan=halfspan,  # halfspan for distances (ideally ~ wavelength/2)
-        sampling_density=1,  # in pixel units
-        edge=5,  # outer edge (+/-) for DE-shift wheel and velocity histogram
+        sampling_density=0.25,  # in pixel units
+        edge=10,  # outer edge (+/-) for DE-shift wheel and velocity histogram
         bins_wheel=50,  # number of horizontal/vertical bins for histogram wheels
         binwidth_sum=1,  # binwidth for distance histogram
         kernel_size_general=kernel_size_general,  # kernel for first smoothing step

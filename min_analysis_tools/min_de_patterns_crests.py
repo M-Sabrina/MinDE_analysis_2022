@@ -77,7 +77,10 @@ def compare_crestmaps(map1, map2, sampling_density, look_ahead, demo=0):
             peak_shift[ii] = (x2 - x1) * sampling_density
         else:
             peak_shift[ii] = np.nan
-
+            x1 = np.nan
+            y1 = np.nan
+            x2 = np.nan
+            y2 = np.nan
         # test interrupt -demo=3 or higher:shelved, 2:activate):
         if demo == 3 and badpeaks == False:
             plt.close("all")
