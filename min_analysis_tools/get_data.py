@@ -28,7 +28,7 @@ def generate_pattern(
     X, Y = np.meshgrid(x, y)
     aa0 = np.arctan2(Y, X)
     rr = np.hypot(X, Y)
-    kernel = np.ones((kernel_size, kernel_size), np.float32) / (kernel_size ** 2)
+    kernel = np.ones((kernel_size, kernel_size), np.float32) / (kernel_size**2)
     for ii in range(N_frames):
         plane = ii
         aa = 6 * np.pi * ((plane - 1) / (2 * lambda_t))  # sets turning

@@ -1,3 +1,14 @@
+"""
+This function performs local distance ananlysis on two image stack of Min patterns,
+one for MinD and one for MinE.
+It returns a list of distance magnitudes and vector components in x- and y-direction,
+and shows the results in the form of a 2D and 1D histograms.
+Results are shown in a way that depicts how far MinE is running behind MinD as positive.
+
+Reference: Cees Dekker Lab; project: MinDE; researcher: Sabrina Meindlhumer.
+Code designed & written by Jacob Kerssemakers and Sabrina Meindlhumer, 2022.
+"""
+
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
@@ -134,7 +145,7 @@ def local_DE_compare_analysis(
         ax_wheel.set_ylabel("y-distance (pixels)")
 
         ax_sum.hist(
-            delta_x_DE,
+            -delta_x_DE,  # set negative to show how far E is running behind D
             bins=np.arange(-edge, edge + binwidth_sum, binwidth_sum),
             color="royalblue",
             edgecolor="black",

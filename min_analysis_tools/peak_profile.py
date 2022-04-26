@@ -18,7 +18,7 @@ def sub_unit_pos(prf=0, ixa=0, demo=0):
     if demo:
         LP = 20
         temp_ax = np.arange(0, LP, 1)
-        prf = 5 * np.exp(-((temp_ax - 19) ** 2) / 10 ** 2)
+        prf = 5 * np.exp(-((temp_ax - 19) ** 2) / 10**2)
         ixa = prf.argmax(axis=0)
     # demo section stop  ------------------------
     # find peak position

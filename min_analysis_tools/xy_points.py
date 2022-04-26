@@ -34,14 +34,14 @@ def get_com_extra(xx, yy, zz, use_weights, demo=0):
     M10 = np.sum(xx * zz)
     M11 = np.sum(yy * xx * zz)
     M01 = np.sum(yy * zz)
-    M20 = np.sum((xx ** 2) * zz)
-    M02 = np.sum((yy ** 2) * zz)
+    M20 = np.sum((xx**2) * zz)
+    M02 = np.sum((yy**2) * zz)
     # Centroid row and column
     xm = M10 / M00
     ym = M01 / M00
     #   Second order central moments
-    mu_prime20 = M20 / M00 - xm ** 2
-    mu_prime02 = M02 / M00 - ym ** 2
+    mu_prime20 = M20 / M00 - xm**2
+    mu_prime02 = M02 / M00 - ym**2
     mu_prime11 = M11 / M00 - xm * ym
     #   theta=0.5*atan(2*mu_prime11/(mu_prime20-mu_prime02))*180/pi;
     at_y = mu_prime20 - mu_prime02
@@ -51,11 +51,11 @@ def get_com_extra(xx, yy, zz, use_weights, demo=0):
     # eigenvalues covariance matrix:
     lambda1 = (
         0.5 * (mu_prime20 + mu_prime02)
-        + 0.5 * (4 * mu_prime11 ** 2 + (mu_prime20 - mu_prime02) ** 2) ** 0.5
+        + 0.5 * (4 * mu_prime11**2 + (mu_prime20 - mu_prime02) ** 2) ** 0.5
     )
     lambda2 = (
         0.5 * (mu_prime20 + mu_prime02)
-        - 0.5 * (4 * mu_prime11 ** 2 + (mu_prime20 - mu_prime02) ** 2) ** 0.5
+        - 0.5 * (4 * mu_prime11**2 + (mu_prime20 - mu_prime02) ** 2) ** 0.5
     )
     # eccentricity
     if lambda1 != 0:

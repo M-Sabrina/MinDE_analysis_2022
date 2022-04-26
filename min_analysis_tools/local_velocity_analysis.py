@@ -1,3 +1,12 @@
+"""
+This function performs local velocity ananlysis on an image stack of Min patterns.
+It returns a list of velocity magnitudes and vector components in x- and y-direction,
+and shows the results in the form of a 2D and 1D histograms.
+
+Reference: Cees Dekker Lab; project: MinDE; researcher: Sabrina Meindlhumer.
+Code designed & written by Jacob Kerssemakers and Sabrina Meindlhumer, 2022.
+"""
+
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np

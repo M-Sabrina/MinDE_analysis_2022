@@ -90,29 +90,31 @@ if selection == Selection.SIMULATION:  # simple simulated spiral
         lambda_t=50, lambda_x=1, N_frames=10, demo=True
     )
     fig.show()
-elif selection == Selection.SPIRAL:  # Min spiral (example data)
-    stack_path = stem / "example_data" / "demo_spiral.tif"
-    stackname = "spiral"
-elif (
-    selection == Selection.SOUTHEAST
-):  # Min northwest-directed traveling waves (example data)
-    stack_path = stem / "example_data" / "demo_southeast.tif"
-    stackname = "southeast"
-elif (
-    selection == Selection.WEST
-):  # Min northwest-directed traveling waves (example data)
-    stack_path = stem / "example_data" / "paper_west_E.tif"
-    stackname = "west"
-elif (
-    selection == Selection.STITCH_HORIZONTAL
-):  # Min large horizontally stitched pattern (example data)
-    stack_path = stem / "example_data" / "real_horizontal_stitch.tif"
-    stackname = "stitch_horizontal"
-elif (
-    selection == Selection.STITCH_SQUARE
-):  # Min large square stitched pattern (example data)
-    stack_path = stem / "example_data" / "real_square_stitch.tif"
-    stackname = "stitch_square"
+else:
+    if selection == Selection.SPIRAL:  # Min spiral (example data)
+        stack_path = stem / "example_data" / "demo_spiral.tif"
+        stackname = "spiral"
+    elif (
+        selection == Selection.SOUTHEAST
+    ):  # Min northwest-directed traveling waves (example data)
+        stack_path = stem / "example_data" / "demo_southeast.tif"
+        stackname = "southeast"
+    elif (
+        selection == Selection.WEST
+    ):  # Min northwest-directed traveling waves (example data)
+        stack_path = stem / "example_data" / "paper_west_E.tif"
+        stackname = "west"
+    elif (
+        selection == Selection.STITCH_HORIZONTAL
+    ):  # Min large horizontally stitched pattern (example data)
+        stack_path = stem / "example_data" / "real_horizontal_stitch.tif"
+        stackname = "stitch_horizontal"
+    elif (
+        selection == Selection.STITCH_SQUARE
+    ):  # Min large square stitched pattern (example data)
+        stack_path = stem / "example_data" / "real_square_stitch.tif"
+        stackname = "stitch_square"
+    Min_st = io.imread(stack_path)
 
 if action == action.LOCAL_DISTANCES:
     stack_path_D = stem / "example_data" / "paper_west_D.tif"
@@ -135,7 +137,6 @@ if action == action.LOCAL_DISTANCES:
     ax_D.set_title("MinD stack")
     fig_D.show()
 else:
-    Min_st = io.imread(stack_path)
     fig, ax = plt.subplots(1, 1)
     ax.imshow(Min_st[0, :, :])
     ax.set_title("pattern")

@@ -14,6 +14,77 @@ from skimage import morphology as mp
 from min_analysis_tools import peak_profile, xy_points
 
 
+def compare_profiles(
+    prf1, prf2, sampling_density, look_ahead, return_peaks=False, demo=False
+):
+    """
+    Find maxima of two profile maps, one specific crest location in two
+    consecutive frames of the stack.
+    Only consider those results for which the second crest peak is located
+    in the correct direction (front for look_ahead=1, wake for look_ahead=-1).
+    """
+    # refine peak relations---------------------------------
+    # first profile: get most centered maximum of many:
+    iix1 = peak_profile.get_maxima(prf1, 5)
+    if len(iix1) > 1:
+        mid_ii = len(prf1) / 2
+        df = abs(iix1 - mid_ii)
+        ix1 = iix1[df.argmin(axis=0)]
+    elif len(iix1) == 1:
+        ix1 = iix1[0]
+    elif len(iix1) == 0:
+        ix1 = np.nan
+    # second profile find related peak (forward or backward):
+    if math.isnan(ix1) == False:
+        iix2 = peak_profile.get_maxima(prf2, 5)
+        # sort by index, irrespective of size:
+        iix2 = sorted(iix2)
+        if look_ahead == 1:  # a: first forward from 1
+            ix2_i = np.ndarray.flatten(np.argwhere(iix2 >= ix1))
+            if len(ix2_i) > 0:
+                ix2_i0 = ix2_i[0]
+                ix2 = iix2[ix2_i0]
+            else:
+                ix2 = np.nan
+        elif look_ahead == -1:  # b: first backward from 1
+            ix2_i = np.ndarray.flatten(np.argwhere(iix2 <= ix1))
+            if len(ix2_i) > 0:
+                ix2_i0 = ix2_i[-1]
+                ix2 = iix2[ix2_i0]
+            else:
+                ix2 = np.nan
+    else:
+        ix2 = np.nan
+    # use two chosen maxima to determine shift:
+    badpeaks = math.isnan(ix1 * ix2)
+    if badpeaks == False:
+        x1, y1 = peak_profile.sub_unit_pos(prf1, [ix1])
+        x2, y2 = peak_profile.sub_unit_pos(prf2, [ix2])
+        peak_shift = (x2 - x1) * sampling_density
+    else:
+        peak_shift = np.nan
+        x1 = np.nan
+        y1 = np.nan
+        x2 = np.nan
+        y2 = np.nan
+    # test interrupt -demo=3 or higher:shelved, 2:activate):
+    if demo == 3 and badpeaks == False:
+        plt.close("all")
+        plt.plot(prf1, "ro-", markersize=3)
+        plt.plot(prf2, "bo-", markersize=3)
+        plt.plot(x1, y1, "ko", markersize=6)
+        plt.plot(x2, y2, "ko", markersize=6)
+        plt.title("cross-section shift")
+        plt.xlabel("distance (pixels)")
+        plt.ylabel("fluorescence, a.u.")
+        plt.show()
+        breakpoint()  # click-to-code help
+    if return_peaks:
+        return peak_shift, x1, y1, x2, y2
+    else:
+        return peak_shift
+
+
 def compare_crestmaps(map1, map2, sampling_density, look_ahead, demo=0):
     """
     Find peak locations per crest cross sections, collected in 2D profile maps).
@@ -36,63 +107,9 @@ def compare_crestmaps(map1, map2, sampling_density, look_ahead, demo=0):
     for ii in np.arange(rr):
         prf1 = map1[ii, :]
         prf2 = map2[ii, :]
-
-        # refine peak relations---------------------------------
-        # first profile: get most centered maximum of many:
-        iix1 = peak_profile.get_maxima(prf1, 5)
-        if len(iix1) > 1:
-            mid_ii = len(prf1) / 2
-            df = abs(iix1 - mid_ii)
-            ix1 = iix1[df.argmin(axis=0)]
-        elif len(iix1) == 1:
-            ix1 = iix1[0]
-        elif len(iix1) == 0:
-            ix1 = np.nan
-        # second profile find related peak (forward or backward):
-        if math.isnan(ix1) == False:
-            iix2 = peak_profile.get_maxima(prf2, 5)
-            # sort by index, irrespective of size:
-            iix2 = sorted(iix2)
-            if look_ahead == 1:  # a: first forward from 1
-                ix2_i = np.ndarray.flatten(np.argwhere(iix2 >= ix1))
-                if len(ix2_i) > 0:
-                    ix2_i0 = ix2_i[0]
-                    ix2 = iix2[ix2_i0]
-                else:
-                    ix2 = np.nan
-            elif look_ahead == -1:  # b: first backward from 1
-                ix2_i = np.ndarray.flatten(np.argwhere(iix2 <= ix1))
-                if len(ix2_i) > 0:
-                    ix2_i0 = ix2_i[-1]
-                    ix2 = iix2[ix2_i0]
-                else:
-                    ix2 = np.nan
-        else:
-            ix2 = np.nan
-        # use two chosen maxima to determine shift:
-        badpeaks = math.isnan(ix1 * ix2)
-        if badpeaks == False:
-            x1, y1 = peak_profile.sub_unit_pos(prf1, [ix1])
-            x2, y2 = peak_profile.sub_unit_pos(prf2, [ix2])
-            peak_shift[ii] = (x2 - x1) * sampling_density
-        else:
-            peak_shift[ii] = np.nan
-            x1 = np.nan
-            y1 = np.nan
-            x2 = np.nan
-            y2 = np.nan
-        # test interrupt -demo=3 or higher:shelved, 2:activate):
-        if demo == 3 and badpeaks == False:
-            plt.close("all")
-            plt.plot(prf1, "ro-", markersize=3)
-            plt.plot(prf2, "bo-", markersize=3)
-            plt.plot(x1, y1, "ko", markersize=6)
-            plt.plot(x2, y2, "ko", markersize=6)
-            plt.title("cross-section shift")
-            plt.xlabel("distance (pixels)")
-            plt.ylabel("fluorescence, a.u.")
-            plt.show()
-            breakpoint()  # click-to-code help
+        peak_shift[ii] = compare_profiles(
+            prf1, prf2, sampling_density, look_ahead, return_peaks=False, demo=demo
+        )
 
     return peak_shift
 
