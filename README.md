@@ -10,11 +10,6 @@ Further, this repository contains three notebooks:
 - DEMO_MinDE_local_analysis.ipynb: demonstration of local analysis
 - Quickstart_Min_analysis.ipynb: quick analysis tool for single-stack Min pattern analysis
 
-
-Jupyter notebooks can be accessed in the following binder:
-
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/M-Sabrina/MinDE_analysis_2022/HEAD)
-
 # Installation
 
 - Install miniconda from https://docs.conda.io/en/latest/miniconda.html 
