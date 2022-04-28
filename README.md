@@ -2,13 +2,15 @@
 
 Cees Dekker Lab, Bionanoscience department, TU Delft, 03/2022, developed by Jacob Kerssemakers and Sabrina Meindlhumer
 
+In the following, we provide instructions on how to set up a Python environment 'min_analysis' and install a package 'min_analysis_tools'. These tools can be used to perform analysis on Min protein surface pattern data.
+The folder 'min_analysis_scripts' contains scripts that use the provided tools to perform analysis on single stacks or perform batch processing of all stacks within a given folder.
 
-This repository contains three notebooks:
+Further, this repository contains three notebooks:
 - DEMO_MinDE_global_analysis.ipynb: demonstration of global analysis
 - DEMO_MinDE_local_analysis.ipynb: demonstration of local analysis
 - Quickstart_Min_analysis.ipynb: quick analysis tool for single-stack Min pattern analysis
 
-# Installation (Python)
+# Installation
 
 - Install miniconda from https://docs.conda.io/en/latest/miniconda.html 
 - Open terminal (on Windows, search for 'Anaconda prompt')
@@ -28,7 +30,7 @@ For Spyder, that can be done as follows:
 - Go to Preferences
 - Go to tab 'Python interpreter'
 - Select 'Use the following Python interpreter'
-- With Miniconda, the path to the Python interpreter will be as follows: `C:/Users/USERNAME/Miniconda3/envs/min_analysis/python.exe` (change `USERNAME` to your user)
+- With Miniconda and on Windows, the path to the Python interpreter will be as follows: `C:/Users/USERNAME/Miniconda3/envs/min_analysis/python.exe` (change `USERNAME` to your user)
 
 # Execute Jupyter notebook
 
