@@ -38,6 +38,6 @@ For Spyder, that can be done as follows:
 - Execute `jupyter lab`
 - Open the notebook (`.ipynb` extension) within Jupyter
 
-# Remove environment (Python)
+# Remove environment
 
 If you want to remove the environment (because you don't need it anymore or you want to recreate it), execute `conda env remove -n min_analysis` from the base environment.
