@@ -337,7 +337,6 @@ elif action == Action.LOCAL_VELOCITY:
 
     savename = outpath / f"{stackname}_velocity_wheel.png"
     fig.set_size_inches(fig_size)
-    ax_sum.set_ylim((0, 1000))
     fig.tight_layout()
     fig.savefig(savename, dpi=500)
     plt.close(fig)

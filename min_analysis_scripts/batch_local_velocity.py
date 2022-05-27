@@ -114,10 +114,10 @@ for stack in inpath.glob("**/*.tif"):  # find all tif files in inpath
     with open(csv_file, "a") as csv_f:  # will append to existing
         # create the csv writer
         writer = csv.writer(csv_f, delimiter="\t")
-        writer.writerow(header)
         for n in range(velocities.size):
             writer.writerow(
                 [
+                    stackname,
                     velocities[n] * factor,
                     forward_wavevector_x[n],
                     forward_wavevector_y[n],
