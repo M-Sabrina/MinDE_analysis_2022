@@ -39,7 +39,7 @@ plt.rc("ytick", labelsize=10)  # fontsize of the y tick labels
 plt.rc("legend", fontsize=6)  # fontsize of the legend
 plt.rcParams.update({"font.family": "arial"})
 cm = 1 / 2.54  # centimeters in inches (for matplotlib figure size)
-fig_size = (12 * cm, 4.5 * cm)
+fig_size = (12 * cm, 5 * cm)
 
 
 class Action(IntEnum):
@@ -50,10 +50,10 @@ class Action(IntEnum):
 
 
 # Choose action HERE (see list in class "Action" above):
-action = Action.GLOBAL_SPATIAL
+action = Action.LOCAL_DISTANCES
 
 # General / display parameters:
-frames_to_analyse = 10  # integer; set to a very large number to analyse all frames
+frames_to_analyse = 5  # integer; set to a very large number to analyse all frames
 
 # Stack information (set both to None to work with pixel and frames only):
 nmperpix = None  # nanometer per pixel (assuming aspect ratio = 1)
@@ -66,7 +66,7 @@ kymoband = 0.8  # analyse middle ... part of image
 # Local analysis parameters:
 halfspan = None  # halfspan for velocities / distances (ideally ~ wavelength/2)
 # set halfspan to "None" to use automatic halfspan (determined from spatial autocorrelation)
-sampling_density = 0.25  # in pixel units
+sampling_width = 0.25  # in pixel units
 edge = 30  # outer edge(+/-) for histograms; start with ~50 for vel. / ~10 for DE-shift
 bins_wheel = 50  # number of horizontal/vertical bins for histogram wheels
 binwidth_sum = 2.5  # binwidth for 1D hist
@@ -82,20 +82,21 @@ in_D = Path(r"INPUT_PATH_HERE\my_file_D.tif")
 
 ###########################################################
 
-# create outpath
-outpath = infile.parent / f"results"
-if not outpath.is_dir():
-    outpath.mkdir()
-
 # load stack
 if action == Action.LOCAL_DISTANCES:
     MinE_st = io.imread(in_E)
     stackname_E = in_E.stem
     MinD_st = io.imread(in_D)
     stackname_D = in_D.stem
+    outpath = in_E.parent / f"results"
 else:
     Min_st = io.imread(infile)
     stackname = infile.stem
+    outpath = infile.parent / f"results"
+
+# create outpath
+if not outpath.is_dir():
+    outpath.mkdir()
 
 ###########################################################
 
@@ -317,7 +318,14 @@ elif action == Action.LOCAL_VELOCITY:
         velocities,
         forward_wavevector_x,
         forward_wavevector_y,
-        all_wheels,
+        wheels,
+        crests_x,
+        crests_y,
+        framenr,
+        max_x1,
+        max_y1,
+        max_x2,
+        max_y2,
         fig,
         ax_wheel,
         ax_sum,
@@ -325,7 +333,7 @@ elif action == Action.LOCAL_VELOCITY:
         Min_st,
         frames_to_analyse,
         halfspan,  # halfspan for get_velocities (ideally ~ wavelength/2)
-        sampling_density,  # in pixel units
+        sampling_width,  # in pixel units
         edge,  # outer edge (+/-) for velocity wheel and velocity histogram
         bins_wheel,  # number of horizontal/vertical bins for histogram wheels
         binwidth_sum,  # binwidth for velocity magnitude histogram,
@@ -353,6 +361,13 @@ elif action == Action.LOCAL_VELOCITY:
         f"velocities ({unit})",
         "forward_wavevector_x",
         "forward_wavevector_y",
+        "crests_x (pixel position)",
+        "crests_y (pixel position)",
+        "frame_nr",
+        f"trace_max_1 ({sampling_width}*pixels)",
+        "intensity_max_1",
+        f"trace_max_2 ({sampling_width}*pixels)",
+        "intensity_max_2",
     ]
 
     # create csv file and save data
@@ -367,6 +382,13 @@ elif action == Action.LOCAL_VELOCITY:
                     velocities[n] * factor,
                     forward_wavevector_x[n],
                     forward_wavevector_y[n],
+                    crests_x[n],
+                    crests_y[n],
+                    framenr[n],
+                    max_x1[n],
+                    max_y1[n],
+                    max_x2[n],
+                    max_y2[n],
                 ]
             )
 
@@ -378,6 +400,7 @@ elif action == Action.LOCAL_VELOCITY:
 ###########################################################
 
 # Local analysis: 2-channel crest detection
+# TO-DO
 
 elif action == Action.LOCAL_DISTANCES:
 
@@ -390,6 +413,13 @@ elif action == Action.LOCAL_DISTANCES:
         forward_wavevector_x,
         forward_wavevector_y,
         all_wheels,
+        crests_x,
+        crests_y,
+        framenr,
+        max_x1,
+        max_y1,
+        max_x2,
+        max_y2,
         fig,
         ax_wheel,
         ax_sum,
@@ -398,7 +428,7 @@ elif action == Action.LOCAL_DISTANCES:
         MinE_st,
         frames_to_analyse,
         halfspan,  # halfspan for distances (ideally ~ wavelength/2)
-        sampling_density,  # in pixel units
+        sampling_width,  # in pixel units
         edge,  # outer edge (+/-) for DE-shift wheel and histogram
         bins_wheel,  # number of horizontal/vertical bins for histogram wheels
         binwidth_sum,  # binwidth for distance histogram
@@ -424,6 +454,13 @@ elif action == Action.LOCAL_DISTANCES:
         f"distances_DE ({unit})",
         "forward_wavevector_x",
         "forward_wavevector_y",
+        "crests_x (pixel position)",
+        "crests_y (pixel position)",
+        "frame_nr",
+        f"trace_max_1 ({sampling_width}*pixels)",
+        "intensity_max_1",
+        f"trace_max_2 ({sampling_width}*pixels)",
+        "intensity_max_2",
     ]
 
     # create csv file and save data
@@ -438,6 +475,13 @@ elif action == Action.LOCAL_DISTANCES:
                     distances_DE[n] * factor,
                     forward_wavevector_x[n],
                     forward_wavevector_y[n],
+                    crests_x[n],
+                    crests_y[n],
+                    framenr[n],
+                    max_x1[n],
+                    max_y1[n],
+                    max_x2[n],
+                    max_y2[n],
                 ]
             )
 

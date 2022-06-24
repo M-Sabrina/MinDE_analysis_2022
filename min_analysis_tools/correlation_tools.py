@@ -2,10 +2,13 @@
 Series of tools for autocorrelation analysis.
 """
 
+from cmath import nan
+
 import matplotlib.pyplot as plt
 import numpy as np
 from numpy import conj, real
 from numpy.fft import fft2, fftshift, ifft2
+from scipy.interpolate import InterpolatedUnivariateSpline
 from scipy.signal import find_peaks
 
 from min_analysis_tools.clean_kymograph import clean_kymograph
@@ -58,13 +61,14 @@ def radial_profile(crmx):
     return radialprofile
 
 
-def analyze_peaks(trace, kernel_size=0):
+def analyze_peaks(trace, kernel_size=0, demo=False, title_demo=None):
     """
-    Finds first minimum and maximum of a trace.
+    Finds first minimum and maximum of a trace. Optional pre-smoothing. No interpolation.
     Input: slice as 1D numpy array
-    Output: position and value of first minimum, position and value of first maximum,
-    peak-valley-difference
+    Output: position and value of first minimum, position and value of first maximum
     """
+
+    trace_original = trace
 
     if kernel_size > 0:
         # smooth trace
@@ -87,6 +91,82 @@ def analyze_peaks(trace, kernel_size=0):
     # get amplitudes of radial correlation function at min and max
     first_max_val = trace[first_max_pos]
     first_min_val = trace[first_min_pos]
+
+    if demo:  # show trace and found minimum & maximum
+        fig, ax = plt.subplots()
+        x_axis = np.arange(len(trace))
+        ax.plot(x_axis, trace_original)
+        ax.axvline(x=first_min_pos, color="green", linestyle="dotted")
+        ax.axvline(x=first_max_pos, color="magenta", linestyle="dotted")
+        if title_demo:
+            ax.set_title(f"{title_demo}, smoothing kernel = {kernel_size} pixel")
+        fig.show()
+
+    return first_min_pos, first_min_val, first_max_pos, first_max_val
+
+
+def quadratic_spline_roots(spl):
+    """
+    To be used in function fit_analyze_peaks.
+    Gratefully taken from https://stackoverflow.com/questions/50371298/find-maximum-minimum-of-a-1d-interpolated-function [2022/05/28]
+    """
+    roots = []
+    knots = spl.get_knots()
+    for a, b in zip(knots[:-1], knots[1:]):
+        u, v, w = spl(a), spl((a + b) / 2), spl(b)
+        t = np.roots([u + w - 2 * v, w - u, 2 * v])
+        t = t[np.isreal(t) & (np.abs(t) <= 1)]
+        roots.extend(t * (b - a) / 2 + (b + a) / 2)
+    return np.array(roots)
+
+
+def fit_analyze_peaks(trace, demo=False, title_demo=None):
+    """
+    Finds first minimum and maximum of a trace via cubic fitting.
+    Adapted from https://stackoverflow.com/questions/50371298/find-maximum-minimum-of-a-1d-interpolated-function [2022/05/28]
+    Input: slice as 1D numpy array
+    Output: position and value of first minimum, position and value of first maximum
+    """
+
+    # interpolate with polynomials
+    x_axis = np.arange(len(trace))
+    f = InterpolatedUnivariateSpline(x_axis, trace, k=3)
+
+    # determine first min and max
+    cr_pts = quadratic_spline_roots(
+        f.derivative()
+    )  # positions of local minima and maxima
+    cr_vals = f(cr_pts)
+
+    # disentangle local maxima and minima
+    mean_trace = np.mean(trace)
+    local_maxima = cr_pts[cr_vals > mean_trace]
+    local_maxima_vals = cr_vals[cr_vals > mean_trace]
+    local_minima = cr_pts[cr_vals < mean_trace]
+    local_minima_vals = cr_vals[cr_vals < mean_trace]
+
+    # assume that first local minimum is correctly identified
+    first_min_pos = local_minima[0]
+    first_min_val = local_minima_vals[0]
+
+    # take first local maximum after first local minimum (probably 1st or 2nd)
+    for n, max_candidate in enumerate(local_maxima):
+        if max_candidate > first_min_pos:
+            first_max_pos = max_candidate
+            first_max_val = local_maxima_vals[n]
+            break
+
+    if demo:  # show fit
+        fig, ax = plt.subplots()
+        ax.plot(x_axis, trace)
+        x_temp = np.linspace(0, len(trace) - 1, 1000)
+        y_temp = f(x_temp)
+        ax.plot(x_temp, y_temp, "--")
+        ax.axvline(x=first_min_pos, color="green", linestyle="dotted")
+        ax.axvline(x=first_max_pos, color="magenta", linestyle="dotted")
+        if title_demo:
+            ax.set_title(title_demo)
+        fig.show()
 
     return first_min_pos, first_min_val, first_max_pos, first_max_val
 
@@ -114,9 +194,9 @@ def get_spatial_correlation_matrixes(
         print(f"Analysing {frames_to_analyse} frames")
 
     # perform autocorrelation analysis for every frames
-    for framesnr in range(frames_to_analyse):
+    for framenr in range(frames_to_analyse):
 
-        image = MinDE_st_full[framesnr, :, :]
+        image = MinDE_st_full[framenr, :, :]
 
         # calculate correlation matrix for image
         crmx = autocorrelation(image)
@@ -129,9 +209,9 @@ def get_spatial_correlation_matrixes(
 
         # first frames: create storage for correltaion matrixes
         # also, plot example image and correlation matrix if requested
-        if framesnr == 0:
+        if framenr == 0:
             crmx_storage = np.empty((frames_to_analyse, fy, fx))
-            crmx_storage[framesnr, :, :] = crmx
+            crmx_storage[framenr, :, :] = crmx
 
             if demo > 0:
                 fig, (ax_orig, ax_corr) = plt.subplots(1, 2, figsize=(18 * cm, 10 * cm))
@@ -147,7 +227,7 @@ def get_spatial_correlation_matrixes(
                 ax_corr.yaxis.tick_right()
                 plt.subplots_adjust(wspace=0.1)
         else:
-            crmx_storage[framesnr, :, :] = crmx
+            crmx_storage[framenr, :, :] = crmx
 
     # return correlation matrixes (and figure handles, if requested)
     if demo > 0:
@@ -189,10 +269,10 @@ def analyze_radial_profiles(
         ax.set_ylabel("autocorrelation (a.u.)")
 
     # calculate radial profiles and determine characteristic values
-    for framesnr in range(fz):
+    for framenr in range(fz):
 
         # calculate radial profile from correlation matrix
-        crmx = crmx_storage[framesnr, :, :]
+        crmx = crmx_storage[framenr, :, :]
         radialprofile = radial_profile(crmx)
 
         # prepare x axes (in pixels or um) for plotting
@@ -202,22 +282,34 @@ def analyze_radial_profiles(
 
         # plot profiles
         if demo > 0:
-            ax.plot(x_axis, radialprofile, label=f"frame {framesnr+1}")
+            ax.plot(x_axis, radialprofile, label=f"frame {framenr+1}")
 
         try:
+            if demo >= 2:  # diagnosis (requires click to proceed):
+                demo_fitting = True
+                title_demo = f"Radial profile of frame nr {framenr+1}"
+            else:
+                demo_fitting = False
+                title_demo = None
             # analyze local maxima and minima (peaks and valleys)
             (
-                first_min_pos[framesnr],
-                first_min_val[framesnr],
-                first_max_pos[framesnr],
-                first_max_val[framesnr],
-            ) = analyze_peaks(radialprofile, kernel_size=int(fx / 100))
-        except:
-            print(f"Peak analysis not successfull for frame {framesnr+1}")
-            first_min_pos[framesnr] = None
-            first_min_val[framesnr] = None
-            first_max_pos[framesnr] = None
-            first_max_val[framesnr] = None
+                first_min_pos[framenr],
+                first_min_val[framenr],
+                first_max_pos[framenr],
+                first_max_val[framenr],
+            ) = analyze_peaks(
+                radialprofile,
+                kernel_size=int(min(fx, fy) / 100),
+                demo=demo_fitting,
+                title_demo=title_demo,
+            )
+        except Exception as e:
+            print(f"Peak analysis not successfull for frame {framenr+1}")
+            print(f"Cause: {e}")
+            first_min_pos[framenr] = None
+            first_min_val[framenr] = None
+            first_max_pos[framenr] = None
+            first_max_val[framenr] = None
 
     # convert positions from pixels to um
     if nmperpix is not None:
@@ -364,10 +456,10 @@ def analyze_temporal_profiles(
         ax.set_ylabel("autocorrelation (a.u.)")
 
     # plot profiles and calculate characteristic values
-    for framesnr in range(ax1):
+    for framenr in range(ax1):
 
         # define trace to analyze (first row, from t=0 to t=tmax/2)
-        crmx = crmx_storage[framesnr, :, :]
+        crmx = crmx_storage[framenr, :, :]
         tmp = crmx[0, :]  # first row
         prf_tcor = tmp[0 : (ax3 // 2)]  # first tmax/2 time points
         prf_tcor = prf_tcor / max(prf_tcor)
@@ -377,30 +469,40 @@ def analyze_temporal_profiles(
         if frpermin is not None:
             x_axis = x_axis * 60 / frpermin  # convert to seconds, if factor is provided
 
+        if axis == "x":
+            constant_axis = "y"
+        else:
+            constant_axis = "x"
+
         # plot profiles
         if demo > 0:
-            if axis == "x":
-                constant_axis = "y"
-            else:
-                constant_axis = "x"
             ax.plot(
-                x_axis, prf_tcor, label=f"{constant_axis} = {slices2analyze[framesnr]}"
+                x_axis, prf_tcor, label=f"{constant_axis} = {slices2analyze[framenr]}"
             )
 
         try:
+            if demo >= 2:  # diagnosis (requires click to proceed):
+                demo_fitting = True
+                title_demo = f"Fitting trace of resliced frame nr (= slice at constant {constant_axis}) {slices2analyze[framenr]}"
+            else:
+                demo_fitting = False
+                title_demo = None
             # analyze local maxima and minima (peaks and valleys)
             (
-                first_min_pos[framesnr],
-                first_min_val[framesnr],
-                first_max_pos[framesnr],
-                first_max_val[framesnr],
-            ) = analyze_peaks(prf_tcor)
-        except:
-            print(f"Peak analysis not successfull for resliced frames {framesnr+1}")
-            first_min_pos[framesnr] = None
-            first_min_val[framesnr] = None
-            first_max_pos[framesnr] = None
-            first_max_val[framesnr] = None
+                first_min_pos[framenr],
+                first_min_val[framenr],
+                first_max_pos[framenr],
+                first_max_val[framenr],
+            ) = fit_analyze_peaks(prf_tcor, demo=demo_fitting, title_demo=title_demo)
+        except Exception as e:
+            print(
+                f"Peak analysis not successful for resliced frame {framenr+1} ({constant_axis} = {slices2analyze[framenr]})"
+            )
+            print(f"Cause: {e}")
+            first_min_pos[framenr] = None
+            first_min_val[framenr] = None
+            first_max_pos[framenr] = None
+            first_max_val[framenr] = None
 
     # convert positions from pixels to um
     if frpermin is not None:

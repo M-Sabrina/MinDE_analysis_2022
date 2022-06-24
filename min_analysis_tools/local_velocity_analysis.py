@@ -3,6 +3,20 @@ This function performs local velocity ananlysis on an image stack of Min pattern
 It returns a list of velocity magnitudes and vector components in x- and y-direction,
 and shows the results in the form of a 2D and 1D histograms.
 
+Full output (return values):
+    all_velocities - velocity magnitude (pixels/frame)
+    all_forward_wavevector_x - unit vector velocity x-component
+    all_forward_wavevector_y - unit vector velocity y-component
+    all_wheels - 2D histogram ("velocity wheel") data
+    all_crests_x - crest position x
+    all_crests_y - crest position y
+    all_framenr - number of frame
+    all_max_x1 - position of maximum of current frame (in units of sampling density)
+    all_max_y1 - intensity at x1 
+    all_max_x2 - position of maximum of next frame (in units of sampling density)
+    all_max_y2 - intensity at x2
+If demo set to True: additional output - figure handles (fig, ax_wheel, ax_sum)
+
 Reference: Cees Dekker Lab; project: MinDE; researcher: Sabrina Meindlhumer.
 Code designed & written by Jacob Kerssemakers and Sabrina Meindlhumer, 2022.
 """
@@ -12,17 +26,21 @@ import matplotlib.pyplot as plt
 import numpy as np
 from pyoptflow import HornSchunck
 
-from min_analysis_tools import min_de_patterns_crests, min_de_patterns_velocity
+from min_analysis_tools import (
+    min_de_patterns_crests,
+    min_de_patterns_velocity,
+    peak_profile,
+)
 
 
 def local_velocity_analysis(
     MinDE_st,
     frames_to_analyse=10,  # first ... frames
     halfspan=20,  # approximately half the wavelength
-    sampling_density=1,  # density for subpixel resolution sampling
+    sampling_width=1,  # density for subpixel resolution sampling
     edge=100,  # width of velocity wheel (2D histogram) and max of magnitude histogram
     bins_wheel=50,  # number of bins (horizontal/vertical) for velocity wheel (2D histogram)
-    binwidth_sum=10,  # binwidth for velocity mangitude histogram
+    binwidth_sum=5,  # binwidth for velocity mangitude histogram
     kernel_size_general=20,  # kernel for first smoothing step
     kernel_size_flow=35,  # kernel for additional smoothing step
     look_ahead=1,  # 1 -> in propagation direction, -1 -> against it
@@ -91,7 +109,7 @@ def local_velocity_analysis(
             forward_wavevector_x,
             forward_wavevector_y,
             halfspan,
-            sampling_density,
+            sampling_width,
             demo=demo,
         )
         profile_map2, xxgrid, yygrid = min_de_patterns_crests.sample_crests(
@@ -101,12 +119,23 @@ def local_velocity_analysis(
             forward_wavevector_x,
             forward_wavevector_y,
             halfspan,
-            sampling_density,
+            sampling_width,
             demo=demo,
         )
         # use these maps to get the local velocity per crest point
-        velocities = min_de_patterns_crests.compare_crestmaps(
-            profile_map1, profile_map2, sampling_density, look_ahead, demo=demo
+        (
+            velocities,
+            max_x1,
+            max_y1,
+            max_x2,
+            max_y2,
+        ) = min_de_patterns_crests.compare_crestmaps(
+            profile_map1,
+            profile_map2,
+            sampling_width,
+            look_ahead,
+            return_peaks=True,
+            demo=demo,
         )
 
         # build and analyze the  'velocity wheel'
@@ -118,10 +147,39 @@ def local_velocity_analysis(
             bins_wheel,
             demo=demo,
         )
+
+        # save frame number
+        framenr = np.array([fi] * len(velocities))
+
+        # save variables
         if fi == 0:
             all_wheels = thiswheel
+            all_velocities = velocities
+            all_forward_wavevector_x = forward_wavevector_x
+            all_forward_wavevector_y = forward_wavevector_y
+            all_crests_x = crests_x
+            all_crests_y = crests_y
+            all_framenr = framenr
+            all_max_x1 = max_x1
+            all_max_y1 = max_y1
+            all_max_x2 = max_x2
+            all_max_y2 = max_y2
         else:
             all_wheels = all_wheels + thiswheel
+            all_velocities = np.append(all_velocities, velocities)
+            all_forward_wavevector_x = np.append(
+                all_forward_wavevector_x, forward_wavevector_x
+            )
+            all_forward_wavevector_y = np.append(
+                all_forward_wavevector_y, forward_wavevector_y
+            )
+            all_crests_x = np.append(all_crests_x, crests_x)
+            all_crests_y = np.append(all_crests_y, crests_y)
+            all_framenr = np.append(all_framenr, framenr)
+            all_max_x1 = np.append(all_max_x1, max_x1)
+            all_max_y1 = np.append(all_max_y1, max_y1)
+            all_max_x2 = np.append(all_max_x2, max_x2)
+            all_max_y2 = np.append(all_max_y2, max_y2)
 
     # plot full stackresult:
     if demo > 0:
@@ -147,18 +205,46 @@ def local_velocity_analysis(
         ax_sum.set_ylabel("counts")
         ax_sum.set_xlabel("velocity magnitude (pixels/frame)")
         fig.tight_layout()
-        print(
-            f"Median velocity magnitude: {np.nanmedian(velocities):.02f} pixels/frame"
-        )
+
+        velocity_med = np.nanmedian(velocities)
+        # some extra numbers processed from the histogram
+        bins = np.arange(0, edge + binwidth_sum, binwidth_sum)
+        (hist_prf, bin_edges) = np.histogram(velocities, bins)
+        pki = peak_profile.get_maxima(hist_prf, N_max=1)
+        fwhm_pix = peak_profile.get_FWHM(hist_prf, pki[0])
+        fwhm_pifr = binwidth_sum * fwhm_pix
+        print(f"peak velocity magnitude: {bin_edges[pki[0]]:.02f} pixels/frame")
+        print(f"FWHM velocity magnitude: {fwhm_pifr:.02f} pixels/frame")
+        print(f"Median velocity magnitude: {velocity_med:.02f} pixels/frame")
 
         return (
-            velocities,
-            forward_wavevector_x,
-            forward_wavevector_y,
+            all_velocities,
+            all_forward_wavevector_x,
+            all_forward_wavevector_y,
             all_wheels,
+            all_crests_x,
+            all_crests_y,
+            all_framenr,
+            all_max_x1,
+            all_max_y1,
+            all_max_x2,
+            all_max_y2,
             fig,
             ax_wheel,
             ax_sum,
         )
+
     else:
-        return velocities, forward_wavevector_x, forward_wavevector_y, all_wheels
+        return (
+            all_velocities,
+            all_forward_wavevector_x,
+            all_forward_wavevector_y,
+            all_wheels,
+            all_crests_x,
+            all_crests_y,
+            all_framenr,
+            all_max_x1,
+            all_max_y1,
+            all_max_x2,
+            all_max_y2,
+        )

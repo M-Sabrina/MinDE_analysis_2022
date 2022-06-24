@@ -15,7 +15,7 @@ from min_analysis_tools import peak_profile, xy_points
 
 
 def compare_profiles(
-    prf1, prf2, sampling_density, look_ahead, return_peaks=False, demo=False
+    prf1, prf2, sampling_width, look_ahead, return_peaks=False, demo=False
 ):
     """
     Find maxima of two profile maps, one specific crest location in two
@@ -60,7 +60,7 @@ def compare_profiles(
     if badpeaks == False:
         x1, y1 = peak_profile.sub_unit_pos(prf1, [ix1])
         x2, y2 = peak_profile.sub_unit_pos(prf2, [ix2])
-        peak_shift = (x2 - x1) * sampling_density
+        peak_shift = (x2 - x1) * sampling_width
     else:
         peak_shift = np.nan
         x1 = np.nan
@@ -85,13 +85,21 @@ def compare_profiles(
         return peak_shift
 
 
-def compare_crestmaps(map1, map2, sampling_density, look_ahead, demo=0):
+def compare_crestmaps(
+    map1, map2, sampling_width, look_ahead, return_peaks=False, demo=0
+):
     """
     Find peak locations per crest cross sections, collected in 2D profile maps).
     Compare these for two points in time.
     """
     rr, cc = np.shape(map1)
     peak_shift = np.zeros((rr))
+
+    if return_peaks:
+        x1 = np.zeros((rr))  # maximum trace 1
+        y1 = np.zeros((rr))
+        x2 = np.zeros((rr))  # maximum trace 2
+        y2 = np.zeros((rr))
 
     # test interrupt -demo=3 or higher:shelved, 2:activate):
     if demo == 2:
@@ -107,11 +115,19 @@ def compare_crestmaps(map1, map2, sampling_density, look_ahead, demo=0):
     for ii in np.arange(rr):
         prf1 = map1[ii, :]
         prf2 = map2[ii, :]
-        peak_shift[ii] = compare_profiles(
-            prf1, prf2, sampling_density, look_ahead, return_peaks=False, demo=demo
-        )
+        if return_peaks:
+            peak_shift[ii], x1[ii], y1[ii], x2[ii], y2[ii] = compare_profiles(
+                prf1, prf2, sampling_width, look_ahead, return_peaks=True, demo=demo
+            )
+        else:
+            peak_shift[ii] = compare_profiles(
+                prf1, prf2, sampling_width, look_ahead, return_peaks=False, demo=demo
+            )
 
-    return peak_shift
+    if return_peaks:
+        return peak_shift, x1, y1, x2, y2
+    else:
+        return peak_shift
 
 
 def get_rise_or_fall(U, V, Im, demo=0):
@@ -240,14 +256,14 @@ def adjust_stack_orientation(stack):
     return stack_rot
 
 
-def sample_crests(im1, cr_xx, cr_yy, wv_xx, wv_yy, halfspan, sampling_density, demo=0):
+def sample_crests(im1, cr_xx, cr_yy, wv_xx, wv_yy, halfspan, sampling_width, demo=0):
     """
     Build and use a sampling grid over the wavecrests and obtain a sampling map.
     cr_xx,yy: crest points; vv_xx,yy: forward vectors. Normalized to pixel units.
     """
 
     # build a grid from this end use this grid for interpolation;
-    stepvector = np.arange(-halfspan, halfspan, sampling_density)
+    stepvector = np.arange(-halfspan, halfspan, sampling_width)
     LV = len(stepvector)
     # define x- and y- coordinates of all crest points
     xxgrid = np.transpose(np.tile(cr_xx, (LV, 1))) + np.outer(wv_xx, stepvector)

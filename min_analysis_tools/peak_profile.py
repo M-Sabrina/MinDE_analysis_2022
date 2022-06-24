@@ -18,9 +18,10 @@ def sub_unit_pos(prf=0, ixa=0, demo=0):
     if demo:
         LP = 20
         temp_ax = np.arange(0, LP, 1)
-        prf = 5 * np.exp(-((temp_ax - 19) ** 2) / 10**2)
-        ixa = prf.argmax(axis=0)
+        prf = 5 * np.exp(-((temp_ax - 10) ** 2) / 10 * 2)
+        ixa = get_maxima(prf, N_max=1)
     # demo section stop  ------------------------
+
     # find peak position
     LP = len(prf)
     LMX = len(ixa)
@@ -80,3 +81,55 @@ def get_maxima(prf=0, N_max=1):
         else:
             max_ix = [np.nan]
     return max_ix
+
+
+def get_FWHM(prf=0, ix=0):
+    """
+    find full-width-half-maximumFWHM for a single peak. If end of profile is reached 1-sided,
+    FWHM is based on other side. If end-of-profile is reached at two sides,
+    FWHM will be -1
+    """
+    LP = len(prf)
+    half_mx = prf[ix] / 2
+    # lower half-point, start:
+    lo_ix = ix
+    if lo_ix == 0:
+        stopit_lo = True
+        lo_limit = True
+    else:
+        stopit_lo = False
+        lo_limit = False
+    # lower half-point, loop:
+    while stopit_lo == False:
+        lo_ix = lo_ix - 1
+        if prf[lo_ix] < half_mx:
+            stopit_lo = True
+        if lo_ix == 0:
+            stopit_lo = True
+            lo_limit = True
+    # higher half-point, start:
+    hi_ix = ix
+    if hi_ix == LP - 1:
+        stopit_hi = True
+        hi_limit = True
+    else:
+        stopit_hi = False
+        hi_limit = False
+    # higher half-point, loop:
+    while stopit_hi == False:
+        hi_ix = hi_ix + 1
+        if prf[hi_ix] < half_mx:
+            stopit_hi = True
+        if hi_ix == LP - 1:
+            stopit_hi = True
+            hi_limit = True
+    # calculate FWHM
+    if (hi_limit == False) and (lo_limit == False):
+        fwhm = hi_ix - lo_ix
+    if (hi_limit == False) and (lo_limit == True):
+        fwhm = 2 * (hi_ix - ix)
+    if (hi_limit == True) and (lo_limit == False):
+        fwhm = 2 * (ix - lo_ix)
+    if (hi_limit == True) and (lo_limit == True):
+        fwhm = -1
+    return fwhm

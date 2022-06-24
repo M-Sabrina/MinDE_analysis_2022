@@ -36,7 +36,7 @@ frames_to_analyse = 10  # analyse first ... frames per stack
 # Local analysis parameters -> SET
 halfspan = None  # halfspan for velocities / distances (ideally ~ wavelength/2)
 # set halfspan to "None" to use automatic halfspan (determined from spatial autocorrelation)
-sampling_density = 0.25  # in pixel units
+sampling_width = 0.25  # in pixel units
 edge = 30  # outer edge(+/-) for histograms; rec.: start ~50
 bins_wheel = 50  # number of horizontal/vertical bins for histogram wheels
 binwidth_sum = 2.5  # binwidth for 1D hist.; rec.: start ~5
@@ -65,6 +65,13 @@ header = [
     f"velocities ({unit})",
     "forward_wavevector_x",
     "forward_wavevector_y",
+    "crests_x (pixel position)",
+    "crests_y (pixel position)",
+    "frame_nr",
+    f"trace_max_1 ({sampling_width}*pixels)",
+    "intensity_max_1",
+    f"trace_max_2 ({sampling_width}*pixels)",
+    "intensity_max_2",
 ]
 with open(csv_file, "w") as csv_f:  # will overwrite existing
     # create the csv writer
@@ -89,7 +96,14 @@ for stack in inpath.glob("**/*.tif"):  # find all tif files in inpath
         velocities,
         forward_wavevector_x,
         forward_wavevector_y,
-        all_wheels,
+        wheels,
+        crests_x,
+        crests_y,
+        framenr,
+        max_x1,
+        max_y1,
+        max_x2,
+        max_y2,
         fig,
         ax_wheel,
         ax_sum,
@@ -97,7 +111,7 @@ for stack in inpath.glob("**/*.tif"):  # find all tif files in inpath
         Min_st,
         frames_to_analyse,  # analyse first ... frames
         halfspan_tmp,  # halfspan for get_velocities (ideally ~ wavelength/2)
-        sampling_density,  # in pixel units
+        sampling_width,  # in pixel units
         edge,  # outer edge (+/-) for velocity wheel and velocity histogram
         bins_wheel,  # number of horizontal/vertical bins for histogram wheels
         binwidth_sum,  # binwidth for velocity magnitude histogram,
@@ -121,6 +135,13 @@ for stack in inpath.glob("**/*.tif"):  # find all tif files in inpath
                     velocities[n] * factor,
                     forward_wavevector_x[n],
                     forward_wavevector_y[n],
+                    crests_x[n],
+                    crests_y[n],
+                    framenr[n],
+                    max_x1[n],
+                    max_y1[n],
+                    max_x2[n],
+                    max_y2[n],
                 ]
             )
     if nmperpix is not None and frpermin is not None:

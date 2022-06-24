@@ -5,6 +5,20 @@ It returns a list of distance magnitudes and vector components in x- and y-direc
 and shows the results in the form of a 2D and 1D histograms.
 Results are shown in a way that depicts how far MinE is running behind MinD as positive.
 
+Full output (return values):
+    all_velocities - velocity magnitude (pixels/frame)
+    all_forward_wavevector_x - unit vector velocity x-component
+    all_forward_wavevector_y - unit vector velocity y-component
+    all_wheels - 2D histogram ("velocity wheel") data
+    all_crests_x - crest position x
+    all_crests_y - crest position y
+    all_framenr - number of frame
+    all_max_x1 - position of maximum of current frame (in units of sampling density)
+    all_max_y1 - intensity at x1 
+    all_max_x2 - position of maximum of next frame (in units of sampling density)
+    all_max_y2 - intensity at x2
+If demo set to True: additional output - figure handles (fig, ax_wheel, ax_sum)
+
 Reference: Cees Dekker Lab; project: MinDE; researcher: Sabrina Meindlhumer.
 Code designed & written by Jacob Kerssemakers and Sabrina Meindlhumer, 2022.
 """
@@ -14,7 +28,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 from pyoptflow import HornSchunck
 
-from min_analysis_tools import min_de_patterns_crests, min_de_patterns_velocity
+from min_analysis_tools import (
+    min_de_patterns_crests,
+    min_de_patterns_velocity,
+    peak_profile,
+)
 
 
 def local_DE_compare_analysis(
@@ -22,7 +40,7 @@ def local_DE_compare_analysis(
     MinE_st,
     frames_to_analyse=5,  # first ... frames
     halfspan=20,  # approximately half the wavelength
-    sampling_density=1,  # density for subpixel resolution sampling
+    sampling_width=1,  # density for subpixel resolution sampling
     edge=10,  # width of 2D histogram and max of 1D histogram
     bins_wheel=50,  # number of bins (horizontal/vertical) for velocity wheel (2D histogram)
     binwidth_sum=2.5,  # binwidth for velocity mangitude histogram
@@ -93,7 +111,7 @@ def local_DE_compare_analysis(
             forward_wavevector_x,
             forward_wavevector_y,
             halfspan,
-            sampling_density,
+            sampling_width,
             demo=demo,
         )
         profile_map2, xxgrid, yygrid = min_de_patterns_crests.sample_crests(
@@ -103,15 +121,22 @@ def local_DE_compare_analysis(
             forward_wavevector_x,
             forward_wavevector_y,
             halfspan,
-            sampling_density,
+            sampling_width,
             demo=demo,
         )
         # use these maps to get the local velocity per crest point
-        delta_x_DE = min_de_patterns_crests.compare_crestmaps(
+        (
+            delta_x_DE,
+            max_x1,
+            max_y1,
+            max_x2,
+            max_y2,
+        ) = min_de_patterns_crests.compare_crestmaps(
             profile_map1,
             profile_map2,
-            sampling_density,
+            sampling_width,
             look_ahead,
+            return_peaks=True,
             demo=demo,
         )
 
@@ -122,11 +147,41 @@ def local_DE_compare_analysis(
             forward_wavevector_y,
             edge,
             bins_wheel,
+            demo=demo,
         )
+
+        # save frame number
+        framenr = np.array([fi] * len(delta_x_DE))
+
+        # save variables
         if fi == 0:
             all_wheels = thiswheel
+            all_delta_x_DE = delta_x_DE
+            all_forward_wavevector_x = forward_wavevector_x
+            all_forward_wavevector_y = forward_wavevector_y
+            all_crests_x = crests_x
+            all_crests_y = crests_y
+            all_framenr = framenr
+            all_max_x1 = max_x1
+            all_max_y1 = max_y1
+            all_max_x2 = max_x2
+            all_max_y2 = max_y2
         else:
             all_wheels = all_wheels + thiswheel
+            all_delta_x_DE = np.append(all_delta_x_DE, delta_x_DE)
+            all_forward_wavevector_x = np.append(
+                all_forward_wavevector_x, forward_wavevector_x
+            )
+            all_forward_wavevector_y = np.append(
+                all_forward_wavevector_y, forward_wavevector_y
+            )
+            all_crests_x = np.append(all_crests_x, crests_x)
+            all_crests_y = np.append(all_crests_y, crests_y)
+            all_framenr = np.append(all_framenr, framenr)
+            all_max_x1 = np.append(all_max_x1, max_x1)
+            all_max_y1 = np.append(all_max_y1, max_y1)
+            all_max_x2 = np.append(all_max_x2, max_x2)
+            all_max_y2 = np.append(all_max_y2, max_y2)
 
     # demo section start ------------------------
     # plot full stackresult
@@ -145,7 +200,7 @@ def local_DE_compare_analysis(
         ax_wheel.set_ylabel("y-distance (pixels)")
 
         ax_sum.hist(
-            -delta_x_DE,  # set negative to show how far E is running behind D
+            -delta_x_DE,  # set to negative to indicate E is running behind D
             bins=np.arange(-edge, edge + binwidth_sum, binwidth_sum),
             color="royalblue",
             edgecolor="black",
@@ -154,17 +209,44 @@ def local_DE_compare_analysis(
         ax_sum.set_xlabel("distance DE (pixels)")
         fig.tight_layout()
 
-        print(f"Median DE-crest distance: {np.nanmedian(delta_x_DE):.02f} pixels")
-
+        distance_med = np.nanmedian(delta_x_DE)
+        # some extra numbers processed from the histogram
+        bins = np.arange(-edge, edge + binwidth_sum, binwidth_sum)
+        (hist_prf, bin_edges) = np.histogram(delta_x_DE, bins)
+        pki = peak_profile.get_maxima(hist_prf, N_max=1)
+        fwhm_pix = peak_profile.get_FWHM(hist_prf, pki[0])
+        fwhm_pifr = binwidth_sum * fwhm_pix
+        print(f"peak distance: {bin_edges[pki[0]]:.02f} pixels")
+        print(f"FWHM distance: {fwhm_pifr:.02f} pixels")
+        print(f"Median distance: {distance_med:.02f} pixels")
         # demo section stop  ------------------------
         return (
             delta_x_DE,
             forward_wavevector_x,
             forward_wavevector_y,
             all_wheels,
+            all_crests_x,
+            all_crests_y,
+            all_framenr,
+            all_max_x1,
+            all_max_y1,
+            all_max_x2,
+            all_max_y2,
             fig,
             ax_wheel,
             ax_sum,
         )
     else:
-        return delta_x_DE, forward_wavevector_x, forward_wavevector_y, all_wheels
+        return (
+            delta_x_DE,
+            all_forward_wavevector_x,
+            all_forward_wavevector_y,
+            all_wheels,
+            all_crests_x,
+            all_crests_y,
+            all_framenr,
+            all_max_x1,
+            all_max_y1,
+            all_max_x2,
+            all_max_y2,
+        )

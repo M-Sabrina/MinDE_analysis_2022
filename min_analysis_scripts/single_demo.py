@@ -87,7 +87,7 @@ stem = Path(dirname(abspath(__file__))).parent
 if selection == Selection.SIMULATION:  # simple simulated spiral
     stackname = "simulation"
     Min_st, fig, ax = get_data.generate_pattern(
-        lambda_t=50, lambda_x=1, N_frames=10, demo=True
+        lambda_t=25, lambda_x=1, N_frames=50, demo=True
     )
     fig.show()
 else:
@@ -107,12 +107,12 @@ else:
     elif (
         selection == Selection.STITCH_HORIZONTAL
     ):  # Min large horizontally stitched pattern (example data)
-        stack_path = stem / "example_data" / "real_horizontal_stitch.tif"
+        stack_path = stem / "example_data" / "demo_horizontal_stitch.tif"
         stackname = "stitch_horizontal"
     elif (
         selection == Selection.STITCH_SQUARE
     ):  # Min large square stitched pattern (example data)
-        stack_path = stem / "example_data" / "real_square_stitch.tif"
+        stack_path = stem / "example_data" / "demo_square_stitch.tif"
         stackname = "stitch_square"
     Min_st = io.imread(stack_path)
 
@@ -158,6 +158,7 @@ if action == Action.GLOBAL_SPATIAL:
     ) = correlation_tools.get_spatial_correlation_matrixes(
         Min_st,
         frames_to_analyse,
+        demo=demo,
     )
     fig.show()
 
@@ -170,7 +171,7 @@ if action == Action.GLOBAL_SPATIAL:
         first_max_val,
         fig,
         ax,
-    ) = correlation_tools.analyze_radial_profiles(crmx_storage)
+    ) = correlation_tools.analyze_radial_profiles(crmx_storage, demo=demo)
     fig.show()
 
     print(f"mean position of first valley: {np.mean(first_min_pos):.02f} pixels")
@@ -209,6 +210,7 @@ elif action == Action.GLOBAL_TEMPORAL:
             axis,
             kymoband,
             reps_per_kymostack,
+            demo=demo,
         )
         fig.show()
 
@@ -225,6 +227,7 @@ elif action == Action.GLOBAL_TEMPORAL:
             axis,
             crmx_storage,
             slices2analyze,
+            demo=demo,
         )
         fig.show()
 
@@ -257,7 +260,14 @@ elif action == Action.LOCAL_VELOCITY:
         velocities,
         forward_wavevector_x,
         forward_wavevector_y,
-        all_wheels,
+        wheels,
+        crests_x,
+        crests_y,
+        framenr,
+        max_x1,
+        max_y1,
+        max_x2,
+        max_y2,
         fig,
         ax_wheel,
         ax_sum,
@@ -265,7 +275,7 @@ elif action == Action.LOCAL_VELOCITY:
         Min_st,
         frames_to_analyse=frames_to_analyse,
         halfspan=halfspan,  # halfspan for get_velocities (ideally ~ wavelength/2)
-        sampling_density=0.25,  # in pixel units
+        sampling_width=0.25,  # in pixel units
         edge=50,  # outer edge (+/-) for velocity wheel and velocity histogram
         bins_wheel=50,  # number of horizontal/vertical bins for histogram wheels
         binwidth_sum=5,  # binwidth for velocity magnitude histogram,
@@ -279,6 +289,7 @@ elif action == Action.LOCAL_VELOCITY:
 ###########################################################
 
 # Local analysis: 2-channel crest detection
+# TO-DO
 
 elif action == Action.LOCAL_DISTANCES:
 
@@ -291,6 +302,13 @@ elif action == Action.LOCAL_DISTANCES:
         forward_wavevector_x,
         forward_wavevector_y,
         all_wheels,
+        crests_x,
+        crests_y,
+        framenr,
+        max_x1,
+        max_y1,
+        max_x2,
+        max_y2,
         fig,
         ax_wheel,
         ax_sum,
@@ -299,7 +317,7 @@ elif action == Action.LOCAL_DISTANCES:
         MinE_st,
         frames_to_analyse=frames_to_analyse,
         halfspan=halfspan,  # halfspan for distances (ideally ~ wavelength/2)
-        sampling_density=0.25,  # in pixel units
+        sampling_width=0.25,  # in pixel units
         edge=10,  # outer edge (+/-) for DE-shift wheel and velocity histogram
         bins_wheel=50,  # number of horizontal/vertical bins for histogram wheels
         binwidth_sum=1,  # binwidth for distance histogram
