@@ -18,9 +18,9 @@ Jupyter notebooks can be accessed in the following binder:
 
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/M-Sabrina/MinDE_analysis_2022/HEAD)
 
-The first release can be found at Zenodo:
+The second release can be found at Zenodo:
 
-[![DOI](https://zenodo.org/badge/474316785.svg)](https://zenodo.org/badge/latestdoi/474316785)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.6724666.svg)](https://doi.org/10.5281/zenodo.6724666)
 
 
 # Installation
