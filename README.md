@@ -11,6 +11,7 @@ This repository contains three main notebooks:
 - DEMO_MinDE_global_analysis.ipynb: demonstration of global analysis
 - DEMO_MinDE_local_analysis.ipynb: demonstration of local analysis
 - Quickstart_Min_analysis.ipynb: quick analysis tool for single-stack Min pattern analysis
+
 Further, a series of "Supplementary" notebooks, which provide accuracy tests and controls for the provided methods.
 
 Jupyter notebooks can be accessed in the following binder:
