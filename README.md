@@ -1,4 +1,4 @@
-# Code for analyzing MinDE patterns
+# Quantitative analysis of MinDE patterns
 
 Cees Dekker Lab, Bionanoscience department, TU Delft, 03/2022, developed by Jacob Kerssemakers and Sabrina Meindlhumer
 
