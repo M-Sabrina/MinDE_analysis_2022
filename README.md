@@ -2,7 +2,7 @@
 
 Cees Dekker Lab, Bionanoscience department, TU Delft, 03/2022, developed by Jacob Kerssemakers and Sabrina Meindlhumer
 
-Preprint available at: https://www.biorxiv.org/content/10.1101/2022.04.28.489904v2
+Publication available at: https://www.frontiersin.org/articles/10.3389/fphy.2022.930811/full?field=&journalName=Frontiers_in_Physics&id=930811
 
 In the following, we provide instructions on how to set up a Python environment 'min_analysis' and install a package 'min_analysis_tools'. These tools can be used to perform analysis on Min protein surface pattern data.
 The folder 'min_analysis_scripts' contains scripts that use the provided tools to perform analysis on single stacks or perform batch processing of all stacks within a given folder.
