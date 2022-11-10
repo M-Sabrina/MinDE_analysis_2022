@@ -24,7 +24,6 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
-from skimage import io
 
 import min_analysis_tools.clean_tools_2D as clean_tools_2D
 from min_analysis_tools.clean_tools_1D import outlier_flag
@@ -32,10 +31,9 @@ from min_analysis_tools.clean_tools_1D import outlier_flag
 ####################################################################################
 
 
-def clean_image_stack(tif_in, autosave=True):
+def clean_image_stack(tif_in):
     """
     tif_in: np array, image stack (3D)
-    save: bool, if True save cleaned stack + image showing cleaning steps for first frame
     """
 
     # get an exclusion image:
@@ -88,17 +86,6 @@ def clean_image_stack(tif_in, autosave=True):
     axs[1, 2].imshow(firstplane_cln)
     axs[1, 2].set_title("first image: cleaned")
     fig.tight_layout()
-
-    # save cleaned stack and collage of first frame:
-    if autosave:
-        tif_cln_path = tif_inpath.parent / f"cleaned_stacks"
-        tif_cln_path.mkdir(exist_ok=True)
-        io.imsave(
-            tif_cln_path / f"{tif_inpath.stem}_cln.tif",
-            tif_cln,
-            check_contrast=False,
-        )
-        fig.savefig(tif_cln_path / f"{tif_inpath.stem}_cln.pdf")
 
     return tif_cln, fig, axs
 
