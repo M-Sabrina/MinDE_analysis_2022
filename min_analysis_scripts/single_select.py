@@ -5,7 +5,7 @@ from it insofar as it will save the output (png and csv files) in a directory
 "results" within the set inpath.
 
 Input: Pre-cleaned Min pattern stack (tif file, 3D)
-Output: Png and csv files with characteristic paramters, depending on analysis
+Output: Png and csv files with characteristic parameters, depending on analysis
 
 To start, pick one out of 4 provided actions from the class "Actions" below
 by setting the path to the file in the variable "inpath" (or separately in 
@@ -50,7 +50,7 @@ class Action(IntEnum):
 
 
 # Choose action HERE (see list in class "Action" above):
-action = Action.LOCAL_DISTANCES
+action = Action.GLOBAL_SPATIAL
 
 # General / display parameters:
 frames_to_analyse = 5  # integer; set to a very large number to analyse all frames
@@ -70,8 +70,8 @@ sampling_width = 0.25  # in pixel units
 edge = 30  # outer edge(+/-) for histograms; start with ~50 for vel. / ~10 for DE-shift
 bins_wheel = 50  # number of horizontal/vertical bins for histogram wheels
 binwidth_sum = 2.5  # binwidth for 1D hist
-kernel_size_general = 15  # kernel for first smoothing step
-kernel_size_flow = 35  # building smoothening kernel needed for flow analysis
+kernel_size_general = 40  # kernel for first smoothing step
+kernel_size_flow = 50  # building smoothening kernel needed for flow analysis
 
 # Define stack_path -> SET
 # single file (actions 1, 2, 3)
@@ -343,7 +343,10 @@ elif action == Action.LOCAL_VELOCITY:
         demo=True,
     )
 
-    savename = outpath / f"{stackname}_velocity_wheel.png"
+    savename = (
+        outpath
+        / f"{stackname}_velocity_wheel_{kernel_size_general}_{kernel_size_flow}.png"
+    )
     fig.set_size_inches(fig_size)
     fig.tight_layout()
     fig.savefig(savename, dpi=500)
@@ -371,7 +374,10 @@ elif action == Action.LOCAL_VELOCITY:
     ]
 
     # create csv file and save data
-    csv_file = outpath / f"{stackname}_velocities_results.csv"
+    csv_file = (
+        outpath
+        / f"{stackname}_velocities_results_{kernel_size_general}_{kernel_size_flow}.csv"
+    )
     with open(csv_file, "w") as csv_f:  # will overwrite existing
         # create the csv writer
         writer = csv.writer(csv_f, delimiter="\t")
@@ -400,7 +406,6 @@ elif action == Action.LOCAL_VELOCITY:
 ###########################################################
 
 # Local analysis: 2-channel crest detection
-# TO-DO
 
 elif action == Action.LOCAL_DISTANCES:
 

@@ -1,5 +1,5 @@
 """
-This file cleans an image stack by performing the following steps:
+This function cleans an image stack by performing the following steps:
 - Create an exclusion image exclude_im to flag and exclude outliers (very high/low intensity
 areas, which would distort further cleaning).
 - Correct for fluorescence bleaching by normalizing each frame to its mean intensity value.
@@ -11,8 +11,12 @@ fluorescent features such as local specks, holes, and scratches.
 - Correct each image via the following image operation: tif_cln = (tif_in - object_im)/illum_im.
 - Slightly smooth images to diminish effect of sharp edges and remaining artefacts.
 
-Input: single tif image stack (3D), non-processed
-Output: cleaned tif image stack (plus image showing procedure for first frame)
+Input:
+- single tif image stack (3D), non-processed
+- autosave (bool): option to autosave output to subfolder "cleaned_stacks"
+Output:
+- cleaned tif image stack
+- figure showing procedure for first frame (figure handles)
 """
 
 from os.path import abspath, dirname
@@ -28,14 +32,11 @@ from min_analysis_tools.clean_tools_1D import outlier_flag
 ####################################################################################
 
 
-def clean_image_stack(tif_inpath, save=True):
+def clean_image_stack(tif_in, autosave=True):
     """
-    tif_inpath: path, full file path of tif file
-    save: bool, save cleaned stack + image showing cleaning steps for first frame
+    tif_in: np array, image stack (3D)
+    save: bool, if True save cleaned stack + image showing cleaning steps for first frame
     """
-
-    # load stack:
-    tif_in = io.imread(tif_inpath)
 
     # get an exclusion image:
     maxim = np.max(tif_in, axis=0)
@@ -89,7 +90,7 @@ def clean_image_stack(tif_inpath, save=True):
     fig.tight_layout()
 
     # save cleaned stack and collage of first frame:
-    if save:
+    if autosave:
         tif_cln_path = tif_inpath.parent / f"cleaned_stacks"
         tif_cln_path.mkdir(exist_ok=True)
         io.imsave(
