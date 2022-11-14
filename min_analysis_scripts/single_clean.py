@@ -19,8 +19,8 @@ def single_clean(inpath, autosave=True, outpath=None, savedpi=300):
     Min_st = io.imread(inpath)
     # Clean stack:
     Min_st_cln, fig, axs = clean_image_stack(Min_st)
-    # If autosave is true, create outpath as subfolder:
-    if autosave:
+    # If autosave is true or outpath is not given, create outpath as subfolder:
+    if autosave or outpath == None:
         outpath = inpath.parent / f"cleaned_stacks"
     # Save stack and collage of first frame:
     outpath.mkdir(exist_ok=True)
