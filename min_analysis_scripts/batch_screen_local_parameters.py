@@ -21,7 +21,6 @@ from min_analysis_tools.local_velocity_analysis import local_velocity_analysis
 
 
 def screen_file(stackpath):
-
     # general settings -> SET
     nmperpix = 594  # nanometer per pixel (assume aspect ratio 1), set to None for pixel
     frpermin = 4  # frames per minute. Set to None to stick to frames
@@ -138,17 +137,18 @@ def screen_file(stackpath):
 
 
 if __name__ == "__main__":
-
-    inpath = Path(r"INPATH_HERE")  # -> SET
+    inpath = Path(r"C:\Users\Smeindlhumer\Desktop\test")  # -> SET
     parallel = True  # -> SET
 
     # create outpath
     outpath = inpath / "screening_results"
     outpath.mkdir(exist_ok=True)
 
+    tif_files = inpath.glob("**/*.tif")
+
     if parallel:  # parallel = True -> run all files in folder in parallel
         with Pool() as p:
-            p.map(screen_file, inpath.glob("**/*.tif"))
+            p.map(screen_file, tif_files)
     else:  # parallel = False -> run files in folder one by one
-        for stackpath in inpath.glob("**/*.tif"):
+        for stackpath in tif_files:
             screen_file(stackpath)
