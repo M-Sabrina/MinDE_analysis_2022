@@ -64,7 +64,7 @@ def get_stack_dirt_and_light(tif_in, exclude_im, bleach_curve, demo=False):
     object_im = object_im / framecounter
     illum_im = illum_im / framecounter
     # kernel for smoothing :
-    kernel_size = int(st_size[1] / 10)
+    kernel_size = int(st_size[1] / 4)
     general_kernel = np.full(
         (kernel_size, kernel_size), 1 / kernel_size**2, dtype=np.float32
     )
