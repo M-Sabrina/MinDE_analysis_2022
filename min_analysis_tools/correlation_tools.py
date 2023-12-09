@@ -54,7 +54,7 @@ def radial_profile(crmx):
     center = nx // 2
     y, x = np.indices((crmx.shape))
     r = np.sqrt((x - center) ** 2 + (y - center) ** 2)
-    r = r.astype(np.int)
+    r = r.astype(int)
     tbin = np.bincount(r.ravel(), crmx.ravel())
     nr = np.bincount(r.ravel())
     radialprofile = tbin / nr
